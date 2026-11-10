@@ -1,0 +1,16 @@
+{
+  "version": "0.1.0",
+  "artifact": "StabilityConsole-v0.1.0.zip",
+  "environment": "isolated Linux container; Python 3.13.5; Tk 8.6; SQLite 3.46.1",
+  "tests": {
+    "core_unittest": {"status": "TESTED", "passing": 6, "failing": 0},
+    "virtual_gui_smoke": {"status": "TESTED", "result": "PASS", "scope": "initialization, application/task display, due overview, multi-area browser links, persistence"},
+    "syntax_compile": {"status": "TESTED", "result": "PASS"},
+    "preflight_in_container": {"status": "TESTED", "result": "PASS"},
+    "windows_11_launch": {"status": "UNKNOWN", "reason": "Target machine not accessible for code execution"},
+    "real_job_discovery": {"status": "NOT_IMPLEMENTED", "reason": "User-initiated browser searches only; no scraping/import"},
+    "email_or_cv_submission": {"status": "NOT_IMPLEMENTED"}
+  },
+  "privacy": "No network APIs, no account integrations, no credentials, no telemetry; links launch system browser when user explicitly chooses",
+  "release_claim": "Built and container-tested, not Windows-target-verified"
+}
