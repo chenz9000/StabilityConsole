@@ -6,7 +6,7 @@ Job application tracking and management.
 
 Windows desktop application for offline application tracking, daily actions, follow-ups, and browser job-search shortcuts.
 
-**Existing artifact:** Stability Console v0.1.0 was built and container-tested, but not yet tested on the user's Windows 11 system. Its complete source package has not yet been reconciled into this repository. Until that is done, this repository is **not** a verified source build.
+**Existing artifact:** Stability Console v0.1.0 was built and container-tested, but not yet tested on the user's Windows 11 system. The user uploaded the v0.1.0 ZIP and extracted source to this repository in commit `196e7967cdffed76c9a228f7b100ff74ab91f368`. Repository source is present and **INSPECTED at commit manifest level**, but a fresh checkout/build and Windows 11 validation remain outstanding.
 
 Original v0.1.0 ZIP SHA-256:
 `1bba47a7842715079d2b7ff6651917f5afce63429a37239716acd86ccfb275c7`
@@ -21,7 +21,7 @@ Original v0.1.0 ZIP SHA-256:
 
 ## Verification and limitations
 
-- Source package: previously created; **repository source import pending**.
+- Source package: **uploaded to GitHub by the user**; verified from commit file manifest. Full source audit and target execution pending.
 - SQLite, core logic and GUI: previously tested in Linux/container with controlled data.
 - Windows 11 end-to-end execution: **UNKNOWN**.
 - Automatic job discovery: **NOT IMPLEMENTED** in v0.1.0.
@@ -30,7 +30,7 @@ Original v0.1.0 ZIP SHA-256:
 
 ## Next two steps
 
-1. Reconcile exact v0.1.0 source into this repository, preserving original hashes, then verify checkout and launcher on Windows.
+1. Inspect uploaded v0.1.0 source against its original package, check for accidentally committed sensitive/runtime artifacts, then verify checkout and launcher on Windows.
 2. Implement read-only Gmail OAuth synchronization with explicit account consent, reviewable message-to-application matching, deduplication, and visible failure states. Sending remains a separate approval-gated feature.
 
 ## Data and security
