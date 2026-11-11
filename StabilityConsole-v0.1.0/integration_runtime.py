@@ -54,14 +54,14 @@ def install_runtime(root, stop, progress, worker=None):
             import re, datetime, uuid
             tail=spool.read()[-30000:].decode('utf-8','replace')
             tail=re.sub(r'https?://[^\s]+','[package-source URL redacted]',tail)
-            record='Version 0.2.0 | '+datetime.datetime.now(datetime.timezone.utc).isoformat()+' | Run '+uuid.uuid4().hex+' | Setup exit '+str(proc.returncode)+'\n'+tail
+            record='Version 0.2.1 | '+datetime.datetime.now(datetime.timezone.utc).isoformat()+' | Run '+uuid.uuid4().hex+' | Setup exit '+str(proc.returncode)+'\n'+tail
             atomic_write(Path(root)/'integration-setup.log',record.encode())
             if proc.returncode:
                 raise SyncError('Integration dependency installation failed. Review integration-setup.log in the app data folder. Check internet/proxy, disk space and Python venv/pip support, then retry Setup. Offline records are retained.')
         finally:
             if worker is not None: worker.child=None
     atomic_write(v/'installed.sha256', requirements_hash().encode())
-    return 'Integration support installed. Close the app and reopen using Launch-StabilityConsole.bat.'
+    return 'Gmail support installed. The setup wizard will reopen the app and continue.'
 
 
 def kill_tree(proc):

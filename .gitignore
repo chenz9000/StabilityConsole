@@ -41,3 +41,8 @@ dist/
 *.dpapi
 running.lock
 integration-runtime/
+
+# In-app setup and account preferences
+gmail-settings.json
+gmail-setup-progress.json
+readme_seen.flag

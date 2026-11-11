@@ -209,7 +209,7 @@ class Window(GmailPanel, tk.Tk):
             try:backup(self.conn,path);messagebox.showinfo('Backup complete','Database backup saved:\n'+path)
             except Exception:logging.exception('Backup failed');messagebox.showerror('Backup failed','See logs. Backup not confirmed.')
     def first_run(self):
-        messagebox.showinfo('First-run information','STABILITY CONSOLE v'+VERSION+'\n\nThis application stores your records locally.\nIt never sends CVs or submits jobs.\nGmail & advert evidence has optional read-only OAuth sync and browser lookup.\nConfigure these in that tab; closing the app stops sync.\nBrowser job searches open in your default browser for manual review.\n\nBack up your database regularly using the Overview button.')
+        messagebox.showinfo('First-run information','STABILITY CONSOLE v'+VERSION+'\n\nThis application stores your records locally.\nIt never sends CVs or submits jobs.\nTo connect Gmail, open the Gmail & advert evidence tab and choose Set up Gmail.\nThe app guides installation, Google setup and sign-in. Closing the app stops sync.\nBrowser job searches open in your default browser for manual review.\n\nBack up your database regularly using the Overview button.')
         try:(self.root_dir/'readme_seen.flag').write_text('shown',encoding='utf-8')
         except OSError: pass
     def close(self):

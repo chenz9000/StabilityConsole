@@ -1,10 +1,10 @@
 {
-  "version": "0.2.0",
-  "generated_at": "2026-11-11T19:18:13.789386+00:00",
+  "version": "0.2.1",
+  "generated_at": "2026-11-11T19:53:15.847902+00:00",
   "status": "IMPLEMENTED / CONTROLLED-TESTED; NOT TARGET-VERIFIED",
   "controlled_tests": {
     "runner": "python launch.py --self-test",
-    "passed": 18,
+    "passed": 25,
     "failed": 0,
     "platform": "Linux Python 3.12; deterministic Gmail/advert fixtures, not a live mailbox"
   },
@@ -24,5 +24,19 @@
     "Live Gmail synchronization",
     "Installed Edge/Chrome live web lookup/autofill"
   ],
-  "management_summary": "App-lifetime Gmail polling and post-sync browser enrichment are implemented. Source-supported blank fields can be filled; existing values and ambiguous matches remain protected. OAuth setup and Windows end-to-end validation are still required."
+  "management_summary": "In-app Gmail setup now guides installation, app-controlled restart, Google registration and sign-in. A registered Google client is still required; the wizard does not create one or claim success without a live Gmail connection check.",
+  "setup_wizard": {
+    "status": "IMPLEMENTED / CONTROLLED-TESTED",
+    "checks": [
+      "prerequisite ordering",
+      "file presence cannot assert Google success",
+      "resume checkpoints and corrupted-state recovery",
+      "restart waits for previous instance lock",
+      "fixed official Google pages",
+      "restart command carries no credentials"
+    ],
+    "remaining_external_prerequisite": "One-time Google project/Desktop client registration unless an existing connection file is supplied",
+    "windows_gui_and_auto_restart": "UNKNOWN",
+    "live_google_registration_and_signin": "UNKNOWN"
+  }
 }

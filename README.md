@@ -1,18 +1,29 @@
-# StabilityConsole v0.2.0
+# StabilityConsole v0.2.1
 
 Windows desktop application for application tracking, daily actions and semi-active Gmail synchronization. Gmail checks run only while the app is open. Closing the app stops sync; no service, startup task or cloud worker is installed.
 
-**Open `Launch-StabilityConsole.bat` at the repository root.** Pull the latest repository first. The source folder retains its historical `StabilityConsole-v0.1.0` name for compatibility; the code inside is now v0.2.0. The existing v0.1.0 ZIP is historical and does not contain this update.
+**Open `Launch-StabilityConsole.bat` at the repository root.** Pull the latest repository first. The source folder retains its historical `StabilityConsole-v0.1.0` name for compatibility; the code inside is now v0.2.1. The existing v0.1.0 ZIP is historical and does not contain this update.
 
-## First Gmail connection
+## Set up Gmail inside the app
 
-1. Open **Gmail & advert evidence → Setup support**. The app creates/reuses a private local Python environment and installs the pinned dependencies. It downloads about 50–70 MB of Python libraries on Windows; it does not download or replace Edge/Chrome. Network or installation failures are shown. Close and reopen using the same root launcher after setup.
-2. Create a Google Cloud project (or use one you control), enable the Gmail API and configure Google Auth for your account. For a personal Gmail address use an **External** audience, not Workspace-only Internal. If the app is in Testing, add your Gmail address as a test user. Create an **OAuth Desktop app** client, download its JSON, then use **Import OAuth client** in the app. Do not upload the client file, tokens or Gmail evidence to this public repository.
-3. Choose **Connect Gmail** and complete Google's read-only consent in your normal browser. The app checks and displays the connected Gmail address. OAuth client configuration and tokens are encrypted with Windows DPAPI under `%LOCALAPPDATA%\StabilityConsole`, bound to your Windows user. No plaintext-token fallback is used. Testing-mode grants can expire and require reauthorization; the app does not claim perpetual authorization.
-4. Enter application titles in the application register. Add employer/location when known. Enable **Sync while app is open** and save settings. Default interval: five minutes after the previous run finishes, adjustable from 1–120 minutes. Initial history: 180 days, adjustable. **Sync now** works independently of automatic scheduling.
-5. **After sync: browser lookup** is enabled by default. Choose installed Edge (`msedge`) or Chrome (`chrome`). Searches open separate visible browser windows without attaching to your normal profile. Only the entered title, employer and location are sent as public search terms, not your message bodies or private application references.
+1. Pull the latest repository and open the root **Launch-StabilityConsole.bat**.
+2. In **Gmail & advert evidence**, choose **Set up Gmail**.
+3. Follow the wizard. It checks what is missing, installs pinned support libraries after you choose Install, reopens the app automatically and resumes your place. Existing support is reused. No terminal commands, manual Python-package installation or manual restart are required.
+4. Finish Google's guided browser steps if needed, choose the downloaded Google connection file in the wizard, then sign in and choose **Start syncing**.
 
-Official setup reference: https://developers.google.com/workspace/gmail/api/quickstart/python
+The wizard shows one Google step at a time and opens the official page for that step. It includes the personal-Gmail External audience/test-user settings, read-only access value, Desktop client download and file validation. An existing protected connection file skips these registration steps. Existing stored authorization is checked against Gmail rather than treated as proof that it still works.
+
+**Remaining external prerequisite:** this source does not include a shared registered Google sign-in client. Until one is supplied, a Google project and Desktop client must be registered once, by you on Google's pages. The app guides that process; it does not silently create a cloud project, accept Google's terms, bypass sign-in or claim registration succeeded from a checkbox. A valid connection file plus a successful Gmail profile check are required before the wizard offers Start syncing. This is a guided setup, not a claim that first-time setup is already a single Google sign-in click.
+
+Setup progress is stored locally without credentials and resumes after the app-controlled restart. If automatic reopening fails, the normal root launcher resumes the saved wizard. Set up later closes the wizard; completed configuration and your existing records remain in place. Automatic mail checks pause while the wizard is open. The wizard body scrolls so longer steps and errors remain accessible.
+
+Support installation downloads about 50–70 MB of pinned Python libraries on Windows and reuses installed Edge/Chrome. It does not download or replace your browser. OAuth configuration/tokens stay protected with Windows DPAPI under your Windows user; they are never sent to this public repository. Google test-mode authorization may expire and require signing in again.
+
+Default mail interval: five minutes after the prior run finishes, adjustable from 1–120 minutes. Initial history is 180 days, adjustable. Browser enrichment is enabled by default and only fills corroborated blanks. All of these settings remain in the Gmail tab.
+
+Official references used for the built-in guide:
+- https://developers.google.com/workspace/gmail/api/quickstart/python
+- https://developers.google.com/workspace/guides/configure-oauth-consent
 
 ## Email matching and web enrichment
 
@@ -34,8 +45,8 @@ Disconnect removes local stored token access and disables auto sync; historical 
 ## Validation and evidence status
 
 - **INSPECTED:** existing repository source and SQLite workflow; no Gmail integration existed before this update.
-- **IMPLEMENTED:** Gmail OAuth/collection, app-lifetime scheduling, matching/review, visible-browser research, blank-field enrichment, encrypted authorization storage and first-run setup.
-- **TESTED (controlled Linux execution):** original offline tests and Gmail processing/enrichment tests, including pagination, account isolation, deduplication/restart, linked replies, failed/cancelled collection, concurrent edits, no overwrites, ambiguous/expired adverts and worker/instance locks. Run the exact launcher path with `Launch-StabilityConsole.bat --self-test` on Windows; these are controlled fixtures, not live Gmail/browser proof.
+- **IMPLEMENTED:** Gmail OAuth/collection, app-lifetime scheduling, matching/review, visible-browser research, blank-field enrichment, encrypted authorization storage, resumable setup wizard and app-controlled restart.
+- **TESTED (controlled Linux execution):** original offline tests and Gmail processing/enrichment/setup tests, including wizard prerequisites, no false Google-success transitions, resume checkpoints, restart lock hand-off, pagination, account isolation, deduplication/restart, linked replies, failed/cancelled collection, concurrent edits, no overwrites, ambiguous/expired adverts and worker/instance locks. Run the exact launcher path with `Launch-StabilityConsole.bat --self-test` on Windows; these are controlled fixtures, not live Gmail/browser proof.
 - **TESTED:** dependency installation on Python 3.12 Linux and pinned wheel resolution/download for Windows x64 Python 3.14. Dependency availability is not Windows execution evidence.
 - **UNKNOWN / target verification outstanding:** Windows 11 launcher execution, Windows DPAPI round-trip, interactive Gmail OAuth, live Gmail synchronization and installed Edge/Chrome end-to-end search/autofill. The current build environment has no usable Tk display; native desktop focus/input also prevented GUI verification. No claim of a fully working target workflow is made from the controlled tests.
 
@@ -43,4 +54,4 @@ Offline tracking requires Python with Tcl/Tk. Integration setup requires Python 
 
 ## Management summary
 
-Version 0.2.0 adds Gmail collection while the app is open and a post-sync browser research/review path. It preserves existing records and protects ambiguous updates. Google OAuth setup and Windows end-to-end validation remain the final operational prerequisites; this release is implemented and controlled-tested, not target-verified.
+Version 0.2.1 adds one in-app Gmail setup wizard with automatic support installation, restart and recovery. It guides the remaining one-time Google registration and performs a real connection check before starting sync. Existing tracking and review behavior are preserved. Controlled tests pass; Windows GUI/restart, DPAPI and live Gmail/browser execution remain unverified.

@@ -1,0 +1,16 @@
+{
+  "version": "0.2.1",
+  "sha256": {
+    ".gitignore": "7b9e46f7299567844c95df29db9920f24e43d04beae2de22a4654ba00632f450",
+    "README.md": "a1c64d1d543ecd1c409984be04afe93ff87fddb0bddb2168da959f4b08014c73",
+    "StabilityConsole-v0.1.0/app.py": "abcd051b02c34f26af395fc2920454dd3e39762abb6d7486b9716dfb321fe7a1",
+    "StabilityConsole-v0.1.0/core.py": "9043146ab089e7ecd937fdeb716ad330683054bd599070890ecbc3c0066f0e98",
+    "StabilityConsole-v0.1.0/README.md": "30503e1d12fd8afb8fb8de0fc012996b938d12e94585191d575c0fdc6cdff3af",
+    "StabilityConsole-v0.1.0/gmail_panel.py": "abd00cc87526c15103aaff73bce44957cfd5fc17ce98657e9962a3bfeb54815a",
+    "StabilityConsole-v0.1.0/gmail_setup.py": "3648bac6c285af7ba7ab036e73e5b2c789280d62af25bc1d1a398cfb21eea5a0",
+    "StabilityConsole-v0.1.0/integration_runtime.py": "7c427db1f5d5cbad0bacef5c5173e0ff63b2a5dab938ffeb10ad97a9d58c4650",
+    "StabilityConsole-v0.1.0/launch.py": "490ca2a2ed105b70fdce6996cd326c377b6fd6ce96fd75faf6bc6d31f238eeab",
+    "StabilityConsole-v0.1.0/tests/test_gmail_setup.py": "fcb20aefd0a19dfd0fa4ca5920e1fa65c84974baf9f276e26452943822eec96a",
+    "StabilityConsole-v0.1.0/verification.json": "8ae886df1823a2f918eaac8a2c11ae96a3e7a4345198e39bdf8b1a2db8fa3fb1"
+  }
+}

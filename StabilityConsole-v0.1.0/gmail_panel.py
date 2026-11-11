@@ -58,7 +58,7 @@ class GmailPanel:
         init_mail(self.conn)
         with self.conn:self.conn.execute("UPDATE mail_runs SET outcome='INTERRUPTED',finished_at=?,detail='Prior app session ended before completion; no success claimed' WHERE outcome='RUNNING'",(stamp(),))
         self.mail_worker=AppWorker();self.mail_worker.child=None
-        self.mail_closed=False;self.mail_timer=None;self.mail_enabled=False
+        self.mail_closed=False;self.mail_timer=None;self.mail_enabled=False;self.mail_verified=False;self.setup_window=None
         try:self.mail_settings=read_settings(self.root_dir)
         except SyncError as e:self.mail_settings=DEFAULTS.copy();messagebox.showerror('Gmail settings',str(e))
         self.gmail=ttk.Frame(self.notebook);self.notebook.add(self.gmail,text='Gmail & advert evidence')
@@ -71,7 +71,7 @@ class GmailPanel:
         self.mail_preflight=tk.StringVar()
         tk.Label(f,textvariable=self.mail_preflight,bg=BG,fg=MUTED,wraplength=1040,justify='left',anchor='w').pack(fill='x',padx=12,pady=5)
         row=tk.Frame(f,bg=BG);row.pack(fill='x',padx=12,pady=5)
-        for label,command in [('Setup support',self.mail_setup),('Import OAuth client',self.mail_import),('Connect Gmail',self.mail_connect),('Sync now',self.mail_sync_now),('Stop current run',self.mail_stop),('Disconnect',self.mail_disconnect)]:
+        for label,command in [('Set up Gmail',self.mail_wizard),('Sync now',self.mail_sync_now),('Stop current run',self.mail_stop),('Disconnect',self.mail_disconnect)]:
             self.button(row,label,command).pack(side='left',padx=(0,5))
         row=tk.Frame(f,bg=BG);row.pack(fill='x',padx=12,pady=5)
         self.mail_auto=tk.BooleanVar(value=bool(self.mail_settings['enabled']))
@@ -98,17 +98,32 @@ class GmailPanel:
         scroll=ttk.Scrollbar(frame,orient='vertical',command=self.mail_tree.yview);scroll.pack(side='right',fill='y');self.mail_tree.configure(yscrollcommand=scroll.set)
         self.mail_rows={};self.mail_tree.bind('<Double-1>',lambda e:self.mail_review())
         row=tk.Frame(f,bg=BG);row.pack(fill='x',padx=12,pady=(3,10))
-        for label,command in [('Review selected message',self.mail_review),('Lookup selected advert',self.mail_lookup_selected),('Open public web search',self.mail_open_search),('Google setup instructions',lambda:webbrowser.open('https://developers.google.com/workspace/gmail/api/quickstart/python'))]:
+        for label,command in [('Review selected message',self.mail_review),('Lookup selected advert',self.mail_lookup_selected),('Open public web search',self.mail_open_search)]:
             self.button(row,label,command).pack(side='left',padx=(0,6))
         self.refresh_mail();self.mail_check_preflight();self.after(200,self.mail_poll)
-        if self.mail_auto.get():self.mail_schedule(1500)
+        from gmail_setup import checkpoint
+        resume=checkpoint(self.root_dir)
+        if resume.get('active') or '--resume-gmail-setup' in __import__('sys').argv:
+            self.after(500,self.mail_wizard)
+        elif self.mail_auto.get():self.mail_schedule(1500)
+
+    def mail_wizard(self):
+        if self.setup_window is not None and self.setup_window.winfo_exists():
+            self.setup_window.lift();return
+        if self.mail_worker.busy:
+            messagebox.showinfo('Run in progress','Finish or stop the current run, then choose Set up Gmail.');return
+        if self.mail_timer:self.after_cancel(self.mail_timer);self.mail_timer=None
+        from gmail_setup import GmailSetup
+        self.setup_window=GmailSetup(self)
+        self.notebook.select(self.gmail)
 
     def mail_check_preflight(self):
-        support='PASS' if runtime_ready(self.root_dir) else 'WARN — choose Setup support, then restart with the launcher'
-        platform='PASS' if os.name=='nt' else 'FAIL — Windows is required for DPAPI authorization storage'
-        client='PASS' if (self.root_dir/'gmail-client.dpapi').exists() else 'WARN — import Google OAuth Desktop app JSON'
-        token='PRESENT, not live-verified' if (self.root_dir/'gmail-token.dpapi').exists() else 'NOT CONNECTED'
-        self.mail_preflight.set(f'Runtime: {support} | Windows: {platform}\nOAuth client: {client} | Account: {self.mail_settings.get("account", "UNKNOWN")} | Token: {token}')
+        account=self.mail_settings.get('account') or 'not connected'
+        client=(self.root_dir/'gmail-client.dpapi').exists()
+        if os.name!='nt':text='Gmail setup needs Windows. Offline tracking remains available.'
+        elif not runtime_ready(self.root_dir) or not client:text='Gmail setup is incomplete. Choose Set up Gmail; the app will guide you.'
+        else:text='Saved Gmail account: '+account+'. Live connection status appears above. Choose Set up Gmail to check or reconnect.'
+        self.mail_preflight.set(text)
 
     def refresh_mail(self):
         self.mail_rows={}
@@ -132,8 +147,8 @@ class GmailPanel:
         self.mail_status.set('RUNNING — waiting for live evidence…')
         self.mail_worker.start(work);return True
 
-    def mail_setup(self):
-        if not messagebox.askyesno('Install integration support','Download pinned Google OAuth and Playwright libraries into the app data folder?\n\nThis needs internet, disk space and Python venv support. It does not download or replace your browser. Existing offline tracking remains available.'):return
+    def mail_setup(self,confirm=True):
+        if confirm and not messagebox.askyesno('Install integration support','Download pinned Google OAuth and Playwright libraries into the app data folder?\n\nThis needs internet, disk space and Python venv support. It does not download or replace your browser. Existing offline tracking remains available.'):return
         self.mail_start(lambda stop,progress:install_runtime(self.root_dir,stop,progress,self.mail_worker))
 
     def mail_import(self):
@@ -142,32 +157,43 @@ class GmailPanel:
         if not path:return
         try:
             import_client(self.root_dir,path)
+            self.mail_verified=False
             self.mail_auto.set(False);self.mail_settings['enabled']=False;save_settings(self.root_dir,self.mail_settings)
-            self.mail_status.set('OAuth client imported and protected for this Windows user. Choose Connect Gmail.');self.mail_check_preflight()
+            self.mail_status.set('Google connection file imported and protected. Continue with Sign in to Gmail in the setup wizard.');self.mail_check_preflight()
         except Exception as e:messagebox.showerror('Import failed',str(e) if isinstance(e,SyncError) else 'File could not be read as a valid Google Desktop OAuth client.')
 
-    def mail_connect(self):
+    def mail_connect(self,interactive=True):
+        self.mail_verified=False
         def work(stop,progress):
-            progress('Complete Google read-only consent in your default browser (up to 120 seconds).')
-            creds=credentials(self.root_dir,True)
+            progress('Complete Google read-only consent in your browser (up to 120 seconds).' if interactive else 'Checking saved authorization against Gmail…')
+            creds=credentials(self.root_dir,interactive)
             if stop.is_set():raise SyncError('Connect cancelled. Disconnect locally to remove stored authorization if consent completed.')
             profile=GmailClient(creds).get('profile')
-            settings=read_settings(self.root_dir);settings['account']=profile['emailAddress'];save_settings(self.root_dir,settings)
-            return 'CONNECTED — read-only Gmail account confirmed. Enable sync and save settings to start continuous checks.'
+            settings=read_settings(self.root_dir)
+            if not interactive and settings.get('account') and settings['account'].casefold()!=profile['emailAddress'].casefold():
+                raise SyncError('Saved authorization belongs to another Gmail account. Sign in again and choose the intended account.')
+            settings['account']=profile['emailAddress'];save_settings(self.root_dir,settings)
+            return 'CONNECTED — Gmail confirmed the account. Finish setup to start checks while the app is open.'
         self.mail_start(work)
 
     def mail_save(self):
-        if self.mail_worker.busy:messagebox.showinfo('Busy','Finish or stop the current run before changing sync settings.');return
+        if self.mail_worker.busy:messagebox.showinfo('Busy','Finish or stop the current run before changing sync settings.');return False
         try:
             value={**self.mail_settings,'enabled':self.mail_auto.get(),'enrich':self.mail_enrich.get(),'interval_minutes':int(self.mail_interval.get()),'lookback_days':int(self.mail_days.get()),'browser':self.mail_browser.get()}
             save_settings(self.root_dir,value);self.mail_settings=read_settings(self.root_dir)
             if self.mail_timer:self.after_cancel(self.mail_timer);self.mail_timer=None
             if value['enabled']:self.mail_schedule(100)
-            self.mail_status.set('Settings saved. '+('Sync starts while this window is open.' if value['enabled'] else 'Automatic sync is paused; Sync now remains available.'))
-        except (ValueError,SyncError) as e:messagebox.showerror('Settings failed',str(e))
+            wizard=getattr(self,'setup_window',None)
+            paused=wizard is not None and wizard.winfo_exists() and not wizard.closed
+            self.mail_status.set('Settings saved. '+('Automatic checks wait until Gmail setup is finished.' if paused else 'Sync starts while this window is open.' if value['enabled'] else 'Automatic sync is paused; Sync now remains available.'))
+            return True
+        except (ValueError,SyncError) as e:
+            messagebox.showerror('Settings failed',str(e));return False
 
     def mail_schedule(self,delay=None):
         if self.mail_closed or not self.mail_auto.get():return
+        wizard=getattr(self,'setup_window',None)
+        if wizard is not None and wizard.winfo_exists() and not wizard.closed:return
         if self.mail_timer:self.after_cancel(self.mail_timer)
         self.mail_timer=self.after(delay if delay is not None else self.mail_settings['interval_minutes']*60000,self.mail_auto_tick)
 
@@ -214,6 +240,7 @@ class GmailPanel:
         if self.mail_worker.busy:messagebox.showinfo('Busy','Stop/finish the current run before disconnecting.');return
         self.mail_auto.set(False);self.mail_settings['enabled']=False;save_settings(self.root_dir,self.mail_settings)
         (self.root_dir/'gmail-token.dpapi').unlink(missing_ok=True)
+        self.mail_verified=False
         if self.mail_timer:self.after_cancel(self.mail_timer);self.mail_timer=None
         self.mail_status.set('DISCONNECTED locally. Saved email evidence remains historical. To revoke Google consent too, remove the app in your Google account permissions.');self.mail_check_preflight()
 
@@ -223,6 +250,7 @@ class GmailPanel:
             while True:
                 kind,value=self.mail_worker.events.get_nowait()
                 self.mail_status.set(('FAILED — ' if kind=='error' else '')+str(value))
+                if kind=='done' and str(value).startswith('CONNECTED —'):self.mail_verified=True
                 if kind in ('done','error'):
                     try:self.mail_settings=read_settings(self.root_dir)
                     except SyncError:pass
