@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "sha256": {
+    ".gitignore": "409dc0fdc34d6f60da66f7ca61c294f11da2b6329d86a68d2fdd88a745c5796f",
+    "README.md": "e2b89e0fe89b5a24cf53436aef426b1975c2b665536589b9b674fceef1c0341b",
+    "Launch-StabilityConsole.bat": "ace3cec6cd7013f32949f0c66cb1bda2ed4d0a09472b308f0f9339dd8425ff52",
+    "StabilityConsole-v0.1.0/app.py": "a839d6b1237dfe68af9d864a13ee2dabcc769c7ba10406d8ccbea659e232f202",
+    "StabilityConsole-v0.1.0/core.py": "ff2f79b1dda9d9776614edf3db1a11f57b7f90e6bfc1d88f3ca7c916c484ec5d",
+    "StabilityConsole-v0.1.0/README.md": "13627e5f9f71d1eddcb51d044c8890af99cf6d202c58227de592b64e7e80419a",
+    "StabilityConsole-v0.1.0/Launch-StabilityConsole.bat": "b873a7e3e4f9caaa0d80a21abbc931e4b1e9274e267b726dcdbd48242040721b",
+    "StabilityConsole-v0.1.0/mail_sync.py": "abb0a743394bd1d92b9fc4264b03ab3ee64e64daab47fd2d3f594d819a0d13cd",
+    "StabilityConsole-v0.1.0/gmail_panel.py": "93e7d88a1565c2b43a57fa7da8f53556e662946f42441a846426489205cd143a",
+    "StabilityConsole-v0.1.0/browser_lookup.py": "bcd4092d12c0224473820763f922e545d4bd1cc6b6c8a6f4cb7c5c6ba074bcd3",
+    "StabilityConsole-v0.1.0/integration_runtime.py": "969955f321204e1a743af541a556d641606644464c1d0f9531b8411b6ae7893e",
+    "StabilityConsole-v0.1.0/launch.py": "a4c18a4860cb8047fef23568a0d6c40b7be23dbe2067ce397a5d46b23c7d4e76",
+    "StabilityConsole-v0.1.0/requirements-integrations.txt": "7ce2d7f023a686a49df7ed63cebce549033a0a1611a1f7924d82a26e1fa494bf",
+    "StabilityConsole-v0.1.0/tests/test_mail_sync.py": "0994f719f3bb71056f689b5ceb4dc553fcf03857c86cd5e4a4546eef023db266",
+    "StabilityConsole-v0.1.0/verification.json": "701cb76baaf2488b140c18749028b70b04c88c979c5b036ac9ac9b1a97db7343"
+  }
+}

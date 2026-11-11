@@ -9,7 +9,7 @@ from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlencode, urlparse
 
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 STATUSES = ('Discovered', 'Saved', 'Preparing', 'Applied', 'Acknowledged', 'Replied', 'Interview scheduled', 'Interviewed', 'Offer', 'Rejected', 'Withdrawn', 'Expired', 'Unknown')
 PRIORITIES = ('Urgent', 'High', 'Normal', 'Low')
 
@@ -178,3 +178,4 @@ def preflight(root):
         outcomes.append(('PASS','Tkinter',str(tkinter.TkVersion)))
     except ImportError:outcomes.append(('FAIL','Tkinter','Install Python with Tcl/Tk support'))
     return outcomes
+

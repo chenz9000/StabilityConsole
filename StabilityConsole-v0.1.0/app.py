@@ -1,4 +1,4 @@
-"""Stability Console v0.1.0. No background network collection or auto-sending."""
+"""Stability Console v0.1.0. Optional read-only Gmail sync runs only while this app is open."""
 import logging
 import sys
 import tkinter as tk
@@ -11,7 +11,11 @@ from core import (VERSION,STATUSES,PRIORITIES,data_dir,preflight,connect,add_app
 
 BG='#150e0e'; PANEL='#241716'; FIELD='#352221'; RED='#a92e2c'; GOLD='#d6a36a'; FG='#f5e9e3'; MUTED='#b7a5a0'
 
-class Window(tk.Tk):
+from gmail_panel import GmailPanel
+from integration_runtime import InstanceLock
+from mail_sync import SyncError
+
+class Window(GmailPanel, tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('STABILITY CONSOLE | Local Career & Life Tracker v'+VERSION)
@@ -22,7 +26,7 @@ class Window(tk.Tk):
         self.configure_styles()
         head=tk.Frame(self,bg=BG);head.pack(fill='x',padx=18,pady=(14,5))
         tk.Label(head,text='STABILITY CONSOLE',font=('Segoe UI',20,'bold'),bg=BG,fg=GOLD).pack(side='left')
-        tk.Label(head,text='PRIVATE • OFFLINE • EVIDENCE-LED',font=('Segoe UI',9),bg=BG,fg=MUTED).pack(side='right')
+        tk.Label(head,text='PRIVATE • LOCAL DATA • EVIDENCE-LED',font=('Segoe UI',9),bg=BG,fg=MUTED).pack(side='right')
         self.notebook=ttk.Notebook(self);self.notebook.pack(fill='both',expand=True,padx=16,pady=8)
         self.overview=ttk.Frame(self.notebook);self.apps=ttk.Frame(self.notebook);self.todo=ttk.Frame(self.notebook);self.discovery=ttk.Frame(self.notebook)
         for page,name in [(self.overview,'Overview'),(self.apps,'Applications'),(self.todo,'Daily actions'),(self.discovery,'Browser job search')]:self.notebook.add(page,text=name)
@@ -30,6 +34,7 @@ class Window(tk.Tk):
         self.status=tk.StringVar(value='Local database: '+str(self.root_dir/'stability.db'))
         tk.Label(self,textvariable=self.status,bg=BG,fg=MUTED,anchor='w',font=('Segoe UI',9)).pack(fill='x',padx=18,pady=(0,8))
         self.refresh_all()
+        self.build_gmail()
         if not (self.root_dir/'readme_seen.flag').exists():
             self.after(250,self.first_run)
     def configure_styles(self):
@@ -204,10 +209,11 @@ class Window(tk.Tk):
             try:backup(self.conn,path);messagebox.showinfo('Backup complete','Database backup saved:\n'+path)
             except Exception:logging.exception('Backup failed');messagebox.showerror('Backup failed','See logs. Backup not confirmed.')
     def first_run(self):
-        messagebox.showinfo('First-run information','STABILITY CONSOLE v'+VERSION+'\n\nThis application stores your records locally.\nIt never sends CVs or submits jobs.\nBrowser job searches open in your default browser for manual review.\n\nBack up your database regularly using the Overview button.')
+        messagebox.showinfo('First-run information','STABILITY CONSOLE v'+VERSION+'\n\nThis application stores your records locally.\nIt never sends CVs or submits jobs.\nGmail & advert evidence has optional read-only OAuth sync and browser lookup.\nConfigure these in that tab; closing the app stops sync.\nBrowser job searches open in your default browser for manual review.\n\nBack up your database regularly using the Overview button.')
         try:(self.root_dir/'readme_seen.flag').write_text('shown',encoding='utf-8')
         except OSError: pass
     def close(self):
+        self.gmail_close()
         self.conn.close();self.destroy()
 
 def main():
@@ -215,7 +221,14 @@ def main():
     for status,name,detail in results:print(f'{status}: {name}: {detail}')
     if any(status=='FAIL' for status,_,_ in results):return 2
     logging.basicConfig(filename=str(root/'stability.log'),level=logging.ERROR,format='%(asctime)s %(levelname)s %(message)s')
-    try:app=Window();app.mainloop();return 0
+    lock=InstanceLock(root)
+    try:
+        lock.acquire()
+        app=Window();app.mainloop();return 0
+    except SyncError as exc:
+        print(str(exc));return 2
     except Exception:
         logging.exception('Application startup failed');raise
+    finally:lock.release()
 if __name__=='__main__':sys.exit(main())
+

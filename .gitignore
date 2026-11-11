@@ -35,3 +35,9 @@ dist/
 *.spec
 .idea/
 .vscode/
+
+
+# Gmail consent and local app runtime
+*.dpapi
+running.lock
+integration-runtime/
