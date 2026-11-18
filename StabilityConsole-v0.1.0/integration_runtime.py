@@ -105,10 +105,12 @@ class InstanceLock:
         self.path=Path(root)/'running.lock';self.file=None
     def acquire(self):
         self.path.parent.mkdir(parents=True,exist_ok=True)
-        self.file=self.path.open('a+b');self.file.seek(0)
-        if self.file.read(1)==b'':self.file.write(b'0');self.file.flush()
-        self.file.seek(0)
         try:
+            self.file=self.path.open('a+b')
+            # Reading byte zero before acquiring its lock fails on Windows when
+            # another instance owns it. Inspect the size without reading it.
+            if self.path.stat().st_size==0:self.file.write(b'0');self.file.flush()
+            self.file.seek(0)
             if os.name=='nt':
                 import msvcrt
                 msvcrt.locking(self.file.fileno(),msvcrt.LK_NBLCK,1)
@@ -116,7 +118,7 @@ class InstanceLock:
                 import fcntl
                 fcntl.flock(self.file.fileno(),fcntl.LOCK_EX|fcntl.LOCK_NB)
         except OSError:
-            self.file.close();self.file=None
-            raise SyncError('StabilityConsole is already running for this data folder. Switch to the existing window to avoid conflicting syncs.') from None
+            if self.file:self.file.close();self.file=None
+            raise SyncError('Could not acquire the app data lock. Switch to the existing StabilityConsole window, or check write permissions for the data folder. Do not delete an active lock.') from None
     def release(self):
         if self.file:self.file.close();self.file=None

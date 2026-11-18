@@ -8,6 +8,8 @@ permissions:
 jobs:
   windows:
     runs-on: windows-latest
+    env:
+      PY_PYTHON3: '3.14'
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -16,7 +18,9 @@ jobs:
           python-version: '3.14'
       - name: Run exact Windows launcher checks
         shell: cmd
-        run: Launch-StabilityConsole.bat --self-test
+        run: |
+          py -3 -c "import sys; print(sys.version); assert sys.version_info[:2] == (3, 14)"
+          Launch-StabilityConsole.bat --self-test
       - name: Exercise real Tk workflow through launcher
         shell: cmd
         run: Launch-StabilityConsole.bat --gui-self-test
