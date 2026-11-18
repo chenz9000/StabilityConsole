@@ -32,7 +32,9 @@ class WorkflowPanel:
         self.button(row,'Import session report',self.workflow_import).pack(side='left')
         self.button(row,'Start session',self.workflow_start).pack(side='left',padx=5)
         self.button(row,'Complete session',self.workflow_complete).pack(side='left')
+        row=tk.Frame(self.workflow,bg=BG);row.pack(fill='x',padx=12,pady=(0,5))
         self.button(row,'Retry due mail check',self.workflow_retry).pack(side='left',padx=5)
+        self.button(row,'Cancel file operation',self.workflow_cancel).pack(side='left')
         tk.Label(self.workflow,text='Target: about 15 minutes of useful work. Completing a session schedules a read-only Gmail check five minutes later.\nChecks run while this app is open. Overdue waiting checks resume on reopening; interrupted checks require retry. No mail is sent.',bg=BG,fg=MUTED,justify='left',wraplength=1020).pack(fill='x',padx=12,pady=(0,5))
         tabs=ttk.Notebook(self.workflow);tabs.pack(fill='both',expand=True,padx=12,pady=5)
         self.workflow_sessions=self.workflow_table(tabs,'Sessions',('title','state','started','due','check'),('Session','State','Started','Mail check due','Check outcome'),(180,100,170,170,115))
@@ -120,16 +122,20 @@ class WorkflowPanel:
                 self.workflow_status.set('Import cancelled. Existing records unchanged.');return
             def work(stop,progress):
                 # Re-read to detect replacement between preview and confirmation.
-                current,current_digest=load_report(path)
+                current,current_digest=load_report(path,stop)
                 if current_digest!=digest:raise ValueError('Report changed after preview. Choose it again and review the new contents.')
                 conn=connect(self.root_dir/'stability.db')
-                try:return import_report(conn,current,current_digest,path)
+                try:return import_report(conn,current,current_digest,path,stop,progress)
                 finally:conn.close()
             def done(result):
                 self.workflow_status.set('IMPORT RECORDED — '+('Already imported; nothing duplicated.' if result['duplicate'] else f"{result['created']} new; {result['updated']} updated; {result['preserved']} local field(s) preserved."))
                 self.refresh_all();self.workflow_refresh()
             self.workflow_io_start(work,done)
-        self.workflow_io_start(lambda stop,progress:load_report(path),preview)
+        self.workflow_io_start(lambda stop,progress:load_report(path,stop),preview)
+
+    def workflow_cancel(self):
+        self.workflow_io.cancel()
+        self.workflow_status.set('Cancellation requested. An in-flight file read/database wait must return first; a completed import is retained.')
 
     def workflow_start(self):
         try:
@@ -176,7 +182,7 @@ class WorkflowPanel:
         key=old['document_key'] if old else 'local:'+Path(path).name
         def work(stop,progress):
             conn=connect(self.root_dir/'stability.db')
-            try:return link_document(conn,key,path,old['source_id'] if old else '')
+            try:return link_document(conn,key,path,old['source_id'] if old else '',stop)
             finally:conn.close()
         self.workflow_io_start(work,lambda sha:(self.workflow_refresh(),self.workflow_status.set('Local revision linked: '+sha[:16]+'. Review before approving.')))
 
@@ -186,7 +192,7 @@ class WorkflowPanel:
         if not messagebox.askyesno('Approve reviewed document',f"Confirm you have reviewed this exact file revision:\n{row['filename']}\nSHA-256: {row['sha256']}\n\nThis records approval only. It does not send the document."):return
         def work(stop,progress):
             conn=connect(self.root_dir/'stability.db')
-            try:approve_document(conn,row['document_key'],row['sha256'])
+            try:approve_document(conn,row['document_key'],row['sha256'],stop)
             finally:conn.close()
         self.workflow_io_start(work,lambda _:(self.workflow_refresh(),self.workflow_status.set('Document approval recorded for its exact SHA-256.')))
 
@@ -213,7 +219,8 @@ class WorkflowPanel:
                 if kind=='done':
                     callback=self.workflow_callback;self.workflow_callback=None
                     if callback:self.workflow_deliver(callback,value)
-                elif kind=='error':self.workflow_status.set('FAILED — '+str(value));self.workflow_callback=None
+                elif kind=='error':self.workflow_status.set(str(value) if str(value).startswith('CANCELLED') else 'FAILED — '+str(value));self.workflow_callback=None
+                elif kind=='progress':self.workflow_status.set(str(value))
         except queue.Empty:pass
         row=due_check(self.conn)
         wizard=getattr(self,'setup_window',None)

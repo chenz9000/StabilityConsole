@@ -157,11 +157,17 @@ def validate_report(report):
     return report
 
 
-def load_report(path):
+def cancelled(stop):
+    if stop is not None and stop.is_set():raise ValueError('CANCELLED — local operation stopped; no incomplete import is committed.')
+
+
+def load_report(path, stop=None):
+    cancelled(stop)
     path = Path(path)
     if path.stat().st_size > MAX_REPORT_BYTES:
         raise ValueError('Report exceeds the 5 MiB limit; split it into smaller sessions.')
     raw = path.read_bytes()
+    cancelled(stop)
     if len(raw) > MAX_REPORT_BYTES:
         raise ValueError('Report grew beyond the supported size limit.')
     try:
@@ -178,9 +184,10 @@ def report_summary(report):
     return ', '.join(f'{count} {state}' for state, count in sorted(counts.items())) or 'No applications'
 
 
-def import_report(conn, report, digest, source_file=''):
+def import_report(conn, report, digest, source_file='', stop=None, progress=lambda _:None):
     """One transaction, stable IDs, append-only evidence and local-edit protection."""
     validate_report(report)
+    cancelled(stop)
     if not re.fullmatch(r'[a-f0-9]{64}', digest):
         raise ValueError('Missing report digest.')
     if conn.execute('SELECT 1 FROM workflow_reports WHERE report_id=? AND digest=?', (report['report_id'], digest)).fetchone():
@@ -192,6 +199,8 @@ def import_report(conn, report, digest, source_file=''):
     # Do not call core.add_application here: its own context would commit a partial import.
     with conn:
         for item in report.get('applications', []):
+            cancelled(stop)
+            progress('Importing application '+item['external_id'])
             key = namespace + item['external_id']
             fields = {name: item[name] for name in ('title', 'employer', 'area', 'url', 'cv_version', 'due_date', 'notes', 'applied_on') if name in item}
             fields['status'] = STATES[item['status']]
@@ -229,12 +238,14 @@ def import_report(conn, report, digest, source_file=''):
             conn.execute('INSERT INTO workflow_links VALUES (?,?,?) ON CONFLICT(source_id) DO UPDATE SET application_id=excluded.application_id,baseline_json=excluded.baseline_json',
                          (key, app_id, json.dumps(baseline)))
             for evidence in item.get('evidence', []):
+                cancelled(stop)
                 payload = json.dumps(evidence, sort_keys=True)
                 evidence_id = hashlib.sha256(payload.encode()).hexdigest()
                 conn.execute('INSERT OR IGNORE INTO workflow_evidence VALUES (?,?,?,?,?)', (key, evidence_id, app_id, payload, stamp))
                 if evidence.get('thread_id'):
                     conn.execute('INSERT OR IGNORE INTO mail_bindings VALUES (?,?,?)', (account, evidence['thread_id'], app_id))
         for fact in report.get('profile', []):
+            cancelled(stop)
             old = conn.execute('SELECT * FROM workflow_facts WHERE name=?', (fact['name'],)).fetchone()
             source = fact.get('source', '') or report['report_id']
             if old and old['source'].startswith('Local edit'):
@@ -243,6 +254,7 @@ def import_report(conn, report, digest, source_file=''):
             conn.execute('INSERT INTO workflow_facts VALUES (?,?,?,?,?) ON CONFLICT(name) DO UPDATE SET value=excluded.value,state=excluded.state,source=excluded.source,updated_at=excluded.updated_at',
                          (fact['name'], fact['value'], fact['state'], source, stamp))
         for doc in report.get('documents', []):
+            cancelled(stop)
             key = namespace + doc['document_key']
             sha = doc['sha256'].lower()
             old = conn.execute('SELECT * FROM workflow_documents WHERE document_key=? AND sha256=?', (key, sha)).fetchone()
@@ -257,6 +269,7 @@ def import_report(conn, report, digest, source_file=''):
             detail='Imported historical report; not a fresh app check. '+session.get('check_detail','No mail-check result supplied.')
             conn.execute("INSERT INTO workflow_sessions(id,title,started_at,completed_at,state,check_state,check_detail) VALUES (?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET check_detail=excluded.check_detail",
                 ('import:'+namespace+report['report_id'],session.get('title','Imported job-search session'),session['started_at'],session['completed_at'],'RECORDED','REPORTED',detail))
+        cancelled(stop)
         conn.execute('INSERT INTO workflow_reports VALUES (?,?,?,?,?)', (report['report_id'], digest, stamp, Path(source_file).name, report_summary(report)))
     return result
 
@@ -271,33 +284,36 @@ def save_fact(conn, name, value, state):
                      (name, value, state, 'Local edit / candidate review', timestamp()))
 
 
-def file_digest(path):
+def file_digest(path, stop=None):
     sha = hashlib.sha256()
     with Path(path).open('rb') as fp:
         for block in iter(lambda: fp.read(1024 * 1024), b''):
+            cancelled(stop)
             sha.update(block)
     return sha.hexdigest()
 
 
-def link_document(conn, document_key, path, source_id=''):
+def link_document(conn, document_key, path, source_id='', stop=None):
     path = Path(path).resolve(strict=True)
     if not path.is_file():
         raise ValueError('Choose a local document file.')
-    sha = file_digest(path)
+    sha = file_digest(path,stop)
+    cancelled(stop)
     with conn:
         conn.execute('INSERT INTO workflow_documents VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(document_key,sha256) DO UPDATE SET local_path=excluded.local_path,updated_at=excluded.updated_at',
                      (document_key, sha, path.name, 'REVIEW REQUIRED', 'Local edit / selected file', source_id, str(path), timestamp()))
     return sha
 
 
-def approve_document(conn, key, sha):
+def approve_document(conn, key, sha, stop=None):
     row = conn.execute('SELECT * FROM workflow_documents WHERE document_key=? AND sha256=?', (key, sha)).fetchone()
     if not row or not row['local_path']:
         raise ValueError('Link and review the local file before approving its contents.')
-    if file_digest(row['local_path']) != sha:
+    if file_digest(row['local_path'],stop) != sha:
         raise ValueError('The file has changed. Link its new revision and review it again.')
     if row['state'] == 'SENT':
         raise ValueError('This revision is already recorded as sent; its history is retained.')
+    cancelled(stop)
     with conn:
         conn.execute("UPDATE workflow_documents SET state='APPROVED',source='Local edit / candidate approval',updated_at=? WHERE document_key=? AND sha256=?", (timestamp(), key, sha))
 

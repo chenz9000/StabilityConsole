@@ -114,6 +114,20 @@ class WorkflowTests(unittest.TestCase):
         path.write_text(json.dumps(report()));value,digest=load_report(path)
         self.assertEqual(value['report_id'],'session-1');self.assertEqual(len(digest),64)
 
+    def test_cancelled_import_rolls_back_completed_rows(self):
+        value=report();stop=threading.Event()
+        digest=hashlib.sha256(json.dumps(value).encode()).hexdigest()
+        with self.assertRaisesRegex(ValueError,'CANCELLED'):
+            import_report(self.conn,value,digest,stop=stop,progress=lambda _:stop.set())
+        self.assertEqual(self.conn.execute('SELECT count(*) FROM applications').fetchone()[0],0)
+        self.assertEqual(self.conn.execute('SELECT count(*) FROM workflow_reports').fetchone()[0],0)
+
+    def test_cancelled_file_read_does_not_create_approval(self):
+        path=self.root/'cancelled.txt';path.write_text('Review me')
+        stop=threading.Event();stop.set()
+        with self.assertRaisesRegex(ValueError,'CANCELLED'):link_document(self.conn,'file',path,stop=stop)
+        self.assertEqual(self.conn.execute('SELECT count(*) FROM workflow_documents').fetchone()[0],0)
+
     def test_imported_session_is_historical_not_a_live_check(self):
         value=report();value['session']={'started_at':'2026-01-01T08:00:00+00:00','completed_at':'2026-01-01T08:15:00+00:00','check_detail':'Source reports a completed mail check.'}
         ingest(self.conn,value)

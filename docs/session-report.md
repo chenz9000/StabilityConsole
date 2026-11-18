@@ -6,6 +6,8 @@ Imports record actions performed elsewhere. They do not send applications, conne
 
 Importing the identical report twice does nothing. A newer report with the same namespace and external application IDs adds evidence and updates only fields still equal to their previous imported values, or currently blank. Local edits are preserved. Missing fields never erase recorded CV versions or other details. An existing application with exactly the same title, employer and source URL is reused without overwriting its manually recorded state.
 
+Use **Cancel file operation** to stop an import or file-hash operation. File reads and an existing SQLite lock wait must return before cancellation is observed. An incomplete import rolls back as one transaction; an import already committed is retained. Closing the app also requests cancellation.
+
 ## Report format
 
 Use UTF-8 JSON, at most 5 MiB, with `schema_version: 1`. The example below is fictional demonstration data. A sent application requires submission evidence. Drafts, blocked applications and failed deliveries remain distinct states and are not included in the progressed-application metric.
