@@ -1,8 +1,19 @@
-# StabilityConsole v0.2.1
+# StabilityConsole v0.3.0
 
-Windows desktop application for application tracking, daily actions and semi-active Gmail synchronization. Gmail checks run only while the app is open. Closing the app stops sync; no service, startup task or cloud worker is installed.
+Windows desktop application for application tracking, confirmed profile details, document review, job-search sessions and semi-active Gmail synchronization. Gmail checks run only while the app is open. Closing the app stops sync; no service, startup task or cloud worker is installed.
 
-**Open `Launch-StabilityConsole.bat` at the repository root.** Pull the latest repository first. The source folder retains its historical `StabilityConsole-v0.1.0` name for compatibility; the code inside is now v0.2.1. The existing v0.1.0 ZIP is historical and does not contain this update.
+**Open `Launch-StabilityConsole.bat` at the repository root.** Pull the latest repository first. The source folder retains its historical `StabilityConsole-v0.1.0` name for compatibility; the code inside is now v0.3.0. The existing v0.1.0 ZIP is historical and does not contain this update.
+
+
+## Track job search sessions
+
+Open **Job-search workflow** and choose **Import session report** to bring a private report from the assisted job search into the app. Review its account and status summary first. The import preserves stable application IDs, CV versions, submission and bounce evidence, confirmed profile fields and document approvals. Reimporting the same report does not create duplicate applications. Local edits are preserved. Failed deliveries, blocked work and drafts remain distinct from sent applications. Double-click an evidence row to inspect its sources.
+
+Choose **Start session** when beginning useful work and **Complete session** when finished. The app schedules a read-only Gmail check five minutes later, even when interval sync is disabled. It needs an already configured Gmail connection and an open app. A waiting check survives restart; an interrupted check becomes UNKNOWN rather than a stale success. Missing Gmail setup shows BLOCKED with a retry action. Historical checks imported from a report are labeled REPORTED. No application sending or background service has been added.
+
+In **Confirmed profile**, review or edit facts without assuming unknown details. In **Documents and approval**, link a local file and approve its exact SHA-256 only after reviewing it. A changed document is a different revision and cannot inherit the old approval. Imported document states describe reported external approval/sending; they are not fresh verification of local bytes. Your documents, applications, personal facts and email evidence stay in the private local database, outside this public repository.
+
+The ChatGPT scheduled search continues separately. This desktop integration tracks its reports; it does not embed or execute ChatGPT automations. See [session report format and recovery](docs/session-report.md).
 
 ## Set up Gmail inside the app
 
@@ -55,3 +66,7 @@ Offline tracking requires Python with Tcl/Tk. Integration setup requires Python 
 ## Management summary
 
 Version 0.2.1 adds one in-app Gmail setup wizard with automatic support installation, restart and recovery. It guides the remaining one-time Google registration and performs a real connection check before starting sync. Existing tracking and review behavior are preserved. Controlled tests pass; Windows GUI/restart, DPAPI and live Gmail/browser execution remain unverified.
+
+## Version 0.3.0 management summary
+
+Implemented private report import, profile confirmation, document revision approval and session-completion mail checks. Existing applications, tasks and Gmail setup remain in place; a pre-workflow migration backup is created. The current Linux launcher test run passes 37 controlled tests, including real SQLite imports/rollback, preservation, restart recovery, partial/failed Gmail collection and hash-bound document approval. Live Gmail authorization and the user’s Windows installation remain unverified. Windows and Linux GUI/launcher checks are defined in `.github/workflows/verify.yml`; their actual results must be checked before claiming target validation.

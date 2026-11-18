@@ -12,5 +12,10 @@ if __name__ == '__main__':
         wait_for_restart_unlock(data_dir())
     _, runtime = runtime_paths(data_dir())
     python = str(runtime) if runtime_ready(data_dir()) else sys.executable
-    command=[python,'-m','unittest','discover','-s','tests','-v'] if '--self-test' in sys.argv else [python,str(Path(__file__).with_name('app.py'))]+(['--resume-gmail-setup'] if '--resume-gmail-setup' in sys.argv else [])
+    if '--self-test' in sys.argv:
+        command=[python,'-m','unittest','discover','-s','tests','-v']
+    elif '--gui-self-test' in sys.argv:
+        command=[python,'-c',"import runpy; runpy.run_path('tests/gui_smoke.py')"]
+    else:
+        command=[python,str(Path(__file__).with_name('app.py'))]+(['--resume-gmail-setup'] if '--resume-gmail-setup' in sys.argv else [])
     raise SystemExit(subprocess.call(command,cwd=str(Path(__file__).parent)))

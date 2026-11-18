@@ -1,4 +1,4 @@
-"""Stability Console v0.1.0. Optional read-only Gmail sync runs only while this app is open."""
+"""Stability Console v0.3.0. Read-only Gmail checks run while this app is open."""
 import logging
 import sys
 import tkinter as tk
@@ -12,10 +12,11 @@ from core import (VERSION,STATUSES,PRIORITIES,data_dir,preflight,connect,add_app
 BG='#150e0e'; PANEL='#241716'; FIELD='#352221'; RED='#a92e2c'; GOLD='#d6a36a'; FG='#f5e9e3'; MUTED='#b7a5a0'
 
 from gmail_panel import GmailPanel
+from workflow_panel import WorkflowPanel
 from integration_runtime import InstanceLock
 from mail_sync import SyncError
 
-class Window(GmailPanel, tk.Tk):
+class Window(WorkflowPanel, GmailPanel, tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('STABILITY CONSOLE | Local Career & Life Tracker v'+VERSION)
@@ -35,6 +36,7 @@ class Window(GmailPanel, tk.Tk):
         tk.Label(self,textvariable=self.status,bg=BG,fg=MUTED,anchor='w',font=('Segoe UI',9)).pack(fill='x',padx=18,pady=(0,8))
         self.refresh_all()
         self.build_gmail()
+        self.build_workflow()
         if not (self.root_dir/'readme_seen.flag').exists():
             self.after(250,self.first_run)
     def configure_styles(self):
@@ -197,7 +199,9 @@ class Window(GmailPanel, tk.Tk):
         for item in a:self.due_box.insert('end',f"ACTION  |  {item['due_date']}  |  {item['title']}")
         for item in b:self.due_box.insert('end',f"FOLLOW UP  |  {item['due_date']}  |  {item['title']} ({item['employer']})")
         if not a and not b:self.due_box.insert('end','No overdue actions recorded. Add your next practical step.')
-    def refresh_all(self):self.refresh_apps();self.refresh_tasks();self.refresh_overview()
+    def refresh_all(self):
+        self.refresh_apps();self.refresh_tasks();self.refresh_overview()
+        self.workflow_refresh()
     def export(self):
         path=filedialog.asksaveasfilename(defaultextension='.csv',filetypes=[('CSV files','*.csv')],initialfile='applications-export.csv')
         if path:
@@ -213,7 +217,11 @@ class Window(GmailPanel, tk.Tk):
         try:(self.root_dir/'readme_seen.flag').write_text('shown',encoding='utf-8')
         except OSError: pass
     def close(self):
+        self.workflow_close()
         self.gmail_close()
+        for callback in self.tk.call('after','info'):
+            try:self.after_cancel(callback)
+            except tk.TclError:pass
         self.conn.close();self.destroy()
 
 def main():
