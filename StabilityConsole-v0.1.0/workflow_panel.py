@@ -1,7 +1,9 @@
 """Private workflow UI. Network checks reuse the existing read-only Gmail worker."""
 import json
 import hashlib
+import os
 import queue
+import webbrowser
 from pathlib import Path
 from tkinter import ttk, filedialog, messagebox
 import tkinter as tk
@@ -9,7 +11,7 @@ import tkinter as tk
 from core import connect
 from mail_sync import AppWorker
 from job_workflow import (ensure_schema, recover_sessions, load_report, import_report,
-    report_summary, save_fact, FACT_STATES, link_document, approve_document,
+    report_summary, save_fact, FACT_STATES, link_document, approve_document, file_digest,
     start_session, complete_session, retry_check, due_check, check_result, parse_time)
 
 BG='#150e0e'; PANEL='#241716'; FIELD='#352221'; GOLD='#d6a36a'; FG='#f5e9e3'; MUTED='#b7a5a0'
@@ -51,6 +53,7 @@ class WorkflowPanel:
         self.button(row,'Link local file revision',self.workflow_link_document).pack(side='left')
         self.button(row,'Approve reviewed file',self.workflow_approve).pack(side='left',padx=5)
         self.button(row,'Show document evidence',self.workflow_show_document).pack(side='left')
+        self.button(row,'Open local file',self.workflow_open_document).pack(side='left',padx=5)
         tk.Label(docs,text='Approval belongs to an exact file hash. Changed files need a new revision and review. Imported states are source-report evidence, not live file verification.',bg=BG,fg=MUTED,wraplength=1000,justify='left').pack(fill='x',pady=5)
         self.workflow_details=tk.Text(self.workflow,height=4,bg=PANEL,fg=FG,wrap='word',font=('Segoe UI',9))
         self.workflow_details.pack(fill='x',padx=12,pady=(0,8));self.workflow_details.configure(state='disabled')
@@ -199,6 +202,22 @@ class WorkflowPanel:
     def workflow_show_document(self):
         row=self.workflow_selected_doc()
         if row:self.workflow_show_text('Document revision evidence',json.dumps(row,indent=2))
+
+    def workflow_open_document(self):
+        row=self.workflow_selected_doc()
+        if not row or not row['local_path']:
+            messagebox.showinfo('Link local file','Select a document and use Link local file revision first. Imported evidence does not download private files.');return
+        def work(stop,progress):
+            path=Path(row['local_path']).resolve(strict=True)
+            return str(path),file_digest(path,stop)==row['sha256']
+        def opened(value):
+            path,unchanged=value
+            try:
+                if os.name=='nt':os.startfile(path)
+                elif not webbrowser.open(Path(path).as_uri()):raise OSError('No document viewer confirmed.')
+                self.workflow_status.set('Open requested in your document viewer. '+('The recorded hash matches.' if unchanged else 'CHANGED — link this new revision before approving.'))
+            except OSError: self.workflow_status.set('FAILED — document viewer could not be opened. Open the linked file in your usual viewer.')
+        self.workflow_io_start(work,opened)
 
     def workflow_show_evidence(self):
         selected=self.workflow_apps.selection()
