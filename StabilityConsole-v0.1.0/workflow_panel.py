@@ -38,7 +38,7 @@ class WorkflowPanel:
         tk.Label(self.workflow,text='Target: about 15 minutes of useful work. Completing a session schedules a read-only Gmail check five minutes later.\nChecks run while this app is open. Overdue waiting checks resume on reopening; interrupted checks require retry. No mail is sent.',bg=BG,fg=MUTED,justify='left',wraplength=1020).pack(fill='x',padx=12,pady=(0,5))
         tabs=ttk.Notebook(self.workflow);tabs.pack(fill='both',expand=True,padx=12,pady=5)
         self.workflow_sessions=self.workflow_table(tabs,'Sessions',('title','state','started','due','check'),('Session','State','Started','Mail check due','Check outcome'),(180,100,170,170,115))
-        self.workflow_apps=self.workflow_table(tabs,'Application evidence',('id','title','employer','state'),('Report ID','Position','Employer','Current status'),(180,250,200,130))
+        self.workflow_apps=self.workflow_table(tabs,'Application evidence',('id','title','employer','reported','state'),('Report ID','Position','Employer','Reported status','Current status'),(150,220,160,130,130))
         self.workflow_apps.bind('<Double-1>',lambda _:self.workflow_show_evidence())
         facts=ttk.Frame(tabs);tabs.add(facts,text='Confirmed profile')
         self.workflow_facts=self.workflow_table(facts,None,('name','value','state'),('Field','Value','Confirmation'),(200,500,150))
@@ -82,8 +82,8 @@ class WorkflowPanel:
             return parse_time(value).astimezone().strftime('%d %b %H:%M:%S') if value else ''
         sessions=self.conn.execute('SELECT * FROM workflow_sessions ORDER BY started_at DESC').fetchall()
         self.workflow_fill(self.workflow_sessions,[(r['id'],(r['title'],r['state'],local_time(r['started_at']),local_time(r['check_due']),r['check_state'])) for r in sessions])
-        rows=self.conn.execute('SELECT l.source_id,a.* FROM workflow_links l JOIN applications a ON a.id=l.application_id ORDER BY a.updated_at DESC').fetchall()
-        self.workflow_fill(self.workflow_apps,[(r['source_id'],(r['source_id'].split(':')[-1],r['title'],r['employer'],r['status'])) for r in rows])
+        rows=self.conn.execute('SELECT l.source_id,l.baseline_json,a.* FROM workflow_links l JOIN applications a ON a.id=l.application_id ORDER BY a.updated_at DESC').fetchall()
+        self.workflow_fill(self.workflow_apps,[(r['source_id'],(r['source_id'].split(':')[-1],r['title'],r['employer'],json.loads(r['baseline_json']).get('status','Unknown'),r['status'])) for r in rows])
         facts=self.conn.execute('SELECT * FROM workflow_facts ORDER BY name').fetchall()
         self.workflow_fill(self.workflow_facts,[(r['name'],(r['name'],r['value'],r['state'])) for r in facts])
         self.workflow_doc_rows={}

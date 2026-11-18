@@ -79,6 +79,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(self.conn.execute('SELECT count(*) FROM mail_bindings').fetchone()[0],0)
         value=report();value['applications'][0]['evidence']=[{'kind':'advert','url':'https://example.org/jobs/1'}]
         with self.assertRaises(ValueError):validate_report(value)
+        value['applications'][0]['status']='EMPLOYER-ACKNOWLEDGED'
+        with self.assertRaises(ValueError):validate_report(value)
 
     def test_thread_account_binding_and_existing_application_reuse(self):
         ident=add_application(self.conn,'Support Technician','Example Ltd',url='https://example.org/jobs/1')

@@ -126,6 +126,9 @@ def validate_report(report):
             validate_url(item.get('url', ''))
         if app['status'] == 'SENT' and not any(e.get('kind') == 'submission' and (e.get('message_id') or e.get('url')) for e in evidence):
             raise ValueError('SENT requires submission evidence, not just a proposed application.')
+        progressed=('EMPLOYER-ACKNOWLEDGED','REPLIED','INTERVIEW','REJECTED','WITHDRAWN')
+        if app['status'] in progressed and not any(e.get('kind') in ('submission','acknowledgement','outcome','reply','interview') and (e.get('message_id') or e.get('url')) for e in evidence):
+            raise ValueError('Progressed applications require submission or outcome evidence.')
     names = set()
     for fact in _items(report, 'profile', 200):
         name = _text(fact.get('name'), 'Profile name', 250)
