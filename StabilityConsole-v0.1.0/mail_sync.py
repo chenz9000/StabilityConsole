@@ -270,7 +270,11 @@ def match_message(app, message, bound=False):
     evidence = 'Previously linked Gmail thread' if bound else 'Entered title occurs in message' + ('; employer also occurs' if employer_match else '; employer/application identity needs review')
     suggested = ''
     # These remain suggestions. Quoted history, negation and generic emails require human review.
-    for status, words in [('Rejected', ('not been successful', 'not be moving forward', 'unsuccessful', 'regret to inform')),
+    delivery_notice=any(w in normal(message.get('sender','')) for w in ('mailer daemon','postmaster')) or 'delivery status notification' in normal(message['subject'])
+    if delivery_notice and any(w in combined for w in ('message blocked','address not found','recipient address rejected','delivery failed')):
+        return confidence, evidence+'; delivery failure notice (review required)', 'Failed'
+    for status, words in [('Withdrawn', ('role has been withdrawn', 'position has been withdrawn', 'role was withdrawn', 'position was withdrawn')),
+                          ('Rejected', ('not been successful', 'not be moving forward', 'unsuccessful', 'regret to inform')),
                           ('Interview scheduled', ('interview invitation', 'invite you to an interview', 'interview scheduled')),
                           ('Acknowledged', ('application received', 'received your application', 'thank you for applying'))]:
         if any(w in combined for w in words): suggested = status; break

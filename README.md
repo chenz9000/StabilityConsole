@@ -1,8 +1,19 @@
-# StabilityConsole v0.2.1
+# StabilityConsole v0.3.0
 
-Windows desktop application for application tracking, daily actions and semi-active Gmail synchronization. Gmail checks run only while the app is open. Closing the app stops sync; no service, startup task or cloud worker is installed.
+Windows desktop application for application tracking, confirmed profile details, document review, job-search sessions and semi-active Gmail synchronization. Gmail checks run only while the app is open. Closing the app stops sync; no service, startup task or cloud worker is installed.
 
-**Open `Launch-StabilityConsole.bat` at the repository root.** Pull the latest repository first. The source folder retains its historical `StabilityConsole-v0.1.0` name for compatibility; the code inside is now v0.2.1. The existing v0.1.0 ZIP is historical and does not contain this update.
+**Open `Launch-StabilityConsole.bat` at the repository root.** Pull the latest repository first. The source folder retains its historical `StabilityConsole-v0.1.0` name for compatibility; the code inside is now v0.3.0. The existing v0.1.0 ZIP is historical and does not contain this update.
+
+
+## Track job search sessions
+
+Open **Job-search workflow** and choose **Import session report** to bring a private report from the assisted job search into the app. Review its account and status summary first. The import preserves stable application IDs, CV versions, submission and bounce evidence, confirmed profile fields and document approvals. Reimporting the same report does not create duplicate applications. Local edits are preserved. Failed deliveries, blocked work and drafts remain distinct from sent applications. Double-click an evidence row to inspect its sources.
+
+Choose **Start session** when beginning useful work and **Complete session** when finished. The app schedules a read-only Gmail check five minutes later, even when interval sync is disabled. It needs an already configured Gmail connection and an open app. A waiting check survives restart; an interrupted check becomes UNKNOWN rather than a stale success. Missing Gmail setup shows BLOCKED with a retry action. Historical checks imported from a report are labeled REPORTED. No application sending or background service has been added.
+
+In **Confirmed profile**, review or edit facts without assuming unknown details. In **Documents and approval**, link a local file and approve its exact SHA-256 only after reviewing it. A changed document is a different revision and cannot inherit the old approval. Imported document states describe reported external approval/sending; they are not fresh verification of local bytes. Your documents, applications, personal facts and email evidence stay in the private local database, outside this public repository.
+
+The ChatGPT scheduled search continues separately. This desktop integration tracks its reports; it does not embed or execute ChatGPT automations. See [session report format and recovery](docs/session-report.md).
 
 ## Set up Gmail inside the app
 
@@ -44,14 +55,14 @@ Disconnect removes local stored token access and disables auto sync; historical 
 
 ## Validation and evidence status
 
-- **INSPECTED:** existing repository source and SQLite workflow; no Gmail integration existed before this update.
-- **IMPLEMENTED:** Gmail OAuth/collection, app-lifetime scheduling, matching/review, visible-browser research, blank-field enrichment, encrypted authorization storage, resumable setup wizard and app-controlled restart.
-- **TESTED (controlled Linux execution):** original offline tests and Gmail processing/enrichment/setup tests, including wizard prerequisites, no false Google-success transitions, resume checkpoints, restart lock hand-off, pagination, account isolation, deduplication/restart, linked replies, failed/cancelled collection, concurrent edits, no overwrites, ambiguous/expired adverts and worker/instance locks. Run the exact launcher path with `Launch-StabilityConsole.bat --self-test` on Windows; these are controlled fixtures, not live Gmail/browser proof.
-- **TESTED:** dependency installation on Python 3.12 Linux and pinned wheel resolution/download for Windows x64 Python 3.14. Dependency availability is not Windows execution evidence.
-- **UNKNOWN / target verification outstanding:** Windows 11 launcher execution, Windows DPAPI round-trip, interactive Gmail OAuth, live Gmail synchronization and installed Edge/Chrome end-to-end search/autofill. The current build environment has no usable Tk display; native desktop focus/input also prevented GUI verification. No claim of a fully working target workflow is made from the controlled tests.
+- **INSPECTED:** the current Tk/SQLite application and existing read-only Gmail collector.
+- **IMPLEMENTED:** private report import, stable application links and submission evidence, confirmed profile fields, document revision approval, five-minute session mail checks and recovery/cancellation. Existing Gmail setup, manual status review and public-advert lookup remain available.
+- **TESTED:** 39 controlled tests through the launcher. Coverage includes real SQLite migration backups and rollback, repeated imports, preservation of local edits and missing fields, separate failed-delivery/withdrawal states, exact-hash approvals, delayed checks, restart recovery and partial/failed/cancelled collection. Network responses in these tests are controlled fixtures.
+- **TESTED on Windows with Python 3.14 and Linux with Python 3.12:** the exact Windows batch launcher checks and real Tk GUI workflow; report import twice through the interface, profile/document rows, an unconfigured-mail blocker, shutdown and database reopening. [CI evidence](https://github.com/chenz9000/StabilityConsole/actions/runs/44327823789) and [verification record](verification-v0.3.0.json). These are actual runner executions, not syntax-only checks.
+- **UNKNOWN on the user's target:** Windows 11 installation, Google OAuth/DPAPI and live Gmail/browser operation with the user's account. CI success is not proof those external prerequisites have been completed.
 
-Offline tracking requires Python with Tcl/Tk. Integration setup requires Python 3.11+ and an installed Edge/Chrome browser. Windows 11 x64 with Python 3.14 is the dependency-checked target; other architectures remain unverified. No user credentials, Gmail messages, databases or private logs belong in this public repository.
+Offline tracking needs Python with Tcl/Tk. Integration setup needs Python 3.11+ and an installed Edge/Chrome browser. No private reports, credentials, mail data or local databases belong in this public repository. Source checksums use canonical UTF-8 text with LF line endings, as described in [the source manifest](source-manifest-v0.3.0.json).
 
 ## Management summary
 
-Version 0.2.1 adds one in-app Gmail setup wizard with automatic support installation, restart and recovery. It guides the remaining one-time Google registration and performs a real connection check before starting sync. Existing tracking and review behavior are preserved. Controlled tests pass; Windows GUI/restart, DPAPI and live Gmail/browser execution remain unverified.
+Version 0.3.0 brings externally completed job-search work into the local register, keeps confirmed facts and document approvals with their evidence, and schedules a mailbox check five minutes after session completion. Failed attempts do not count as sent applications. Existing records are backed up and preserved. The Windows lock-contention error discovered during target checks is fixed. Controlled and GUI checks pass on Windows and Linux; live account setup remains an external verification step.

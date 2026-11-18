@@ -1,0 +1,42 @@
+name: Verify desktop workflow
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      PY_PYTHON3: '3.14'
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Run exact Windows launcher checks
+        shell: cmd
+        run: |
+          py -3 -c "import sys; print(sys.version); assert sys.version_info[:2] == (3, 14)"
+          Launch-StabilityConsole.bat --self-test
+      - name: Exercise real Tk workflow through launcher
+        shell: cmd
+        run: Launch-StabilityConsole.bat --gui-self-test
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test display
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb python3-tk
+      - name: Run launcher checks
+        run: python StabilityConsole-v0.1.0/launch.py --self-test
+      - name: Exercise real Tk workflow
+        run: xvfb-run -a python StabilityConsole-v0.1.0/launch.py --gui-self-test

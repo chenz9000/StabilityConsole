@@ -9,6 +9,7 @@ import sys
 import time
 import venv
 from mail_sync import SyncError, atomic_write
+from core import VERSION
 
 HERE = Path(__file__).resolve().parent
 
@@ -54,7 +55,7 @@ def install_runtime(root, stop, progress, worker=None):
             import re, datetime, uuid
             tail=spool.read()[-30000:].decode('utf-8','replace')
             tail=re.sub(r'https?://[^\s]+','[package-source URL redacted]',tail)
-            record='Version 0.2.1 | '+datetime.datetime.now(datetime.timezone.utc).isoformat()+' | Run '+uuid.uuid4().hex+' | Setup exit '+str(proc.returncode)+'\n'+tail
+            record='Version '+VERSION+' | '+datetime.datetime.now(datetime.timezone.utc).isoformat()+' | Run '+uuid.uuid4().hex+' | Setup exit '+str(proc.returncode)+'\n'+tail
             atomic_write(Path(root)/'integration-setup.log',record.encode())
             if proc.returncode:
                 raise SyncError('Integration dependency installation failed. Review integration-setup.log in the app data folder. Check internet/proxy, disk space and Python venv/pip support, then retry Setup. Offline records are retained.')
@@ -104,10 +105,12 @@ class InstanceLock:
         self.path=Path(root)/'running.lock';self.file=None
     def acquire(self):
         self.path.parent.mkdir(parents=True,exist_ok=True)
-        self.file=self.path.open('a+b');self.file.seek(0)
-        if self.file.read(1)==b'':self.file.write(b'0');self.file.flush()
-        self.file.seek(0)
         try:
+            self.file=self.path.open('a+b')
+            # Reading byte zero before acquiring its lock fails on Windows when
+            # another instance owns it. Inspect the size without reading it.
+            if self.path.stat().st_size==0:self.file.write(b'0');self.file.flush()
+            self.file.seek(0)
             if os.name=='nt':
                 import msvcrt
                 msvcrt.locking(self.file.fileno(),msvcrt.LK_NBLCK,1)
@@ -115,7 +118,7 @@ class InstanceLock:
                 import fcntl
                 fcntl.flock(self.file.fileno(),fcntl.LOCK_EX|fcntl.LOCK_NB)
         except OSError:
-            self.file.close();self.file=None
-            raise SyncError('StabilityConsole is already running for this data folder. Switch to the existing window to avoid conflicting syncs.') from None
+            if self.file:self.file.close();self.file=None
+            raise SyncError('Could not acquire the app data lock. Switch to the existing StabilityConsole window, or check write permissions for the data folder. Do not delete an active lock.') from None
     def release(self):
         if self.file:self.file.close();self.file=None

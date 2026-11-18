@@ -203,13 +203,18 @@ class GmailPanel:
             if self.mail_worker.busy:self.mail_schedule(1000)
             else:self.mail_sync_now()
 
-    def mail_sync_now(self):
+    def mail_sync_now(self, workflow_session_id=None):
         settings=self.mail_settings.copy()
+        if workflow_session_id:settings['enrich']=False
         def work(stop,progress):
             conn=connect(self.root_dir/'stability.db')
             try:
                 creds=credentials(self.root_dir)
                 summary=sync_mail(conn,GmailClient(creds),settings,stop,progress)
+                if workflow_session_id:
+                    from job_workflow import check_result
+                    result=conn.execute('SELECT * FROM mail_runs ORDER BY rowid DESC LIMIT 1').fetchone()
+                    check_result(conn,workflow_session_id,result['outcome'],result['detail'],result['run_id'])
                 inspected=0;issues=0
                 if settings['enrich']:
                     account=settings.get('account','')
@@ -228,8 +233,14 @@ class GmailPanel:
                         apply_lookup(conn,msg['account'],msg['message_id'],app['id'],result)
                         if result['state']!='CORROBORATED':issues+=1
                 return 'MAIL COLLECTION — '+summary+f' | Browser lookups: {inspected}; review/failed: {issues}. Remaining pending applications continue next cycle.'
+            except Exception as exc:
+                if workflow_session_id:
+                    from job_workflow import check_result
+                    detail=str(exc) if isinstance(exc,SyncError) else 'Collection failed; no successful Gmail check recorded. Retry or reconnect.'
+                    check_result(conn,workflow_session_id,'CANCELLED' if stop.is_set() else 'FAILED',detail)
+                raise
             finally:conn.close()
-        self.mail_start(work)
+        return self.mail_start(work)
 
     def mail_stop(self):
         self.mail_worker.cancel();self.mail_status.set('Stop requested. Current HTTP request may take up to 20 seconds; Google consent up to 120 seconds. Automatic scheduling is paused until settings are saved again.')

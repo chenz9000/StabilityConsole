@@ -1,0 +1,21 @@
+{
+  "version": "0.3.0",
+  "evidence_status": "TESTED",
+  "tested_code_commit": "ff576e0386136830c80a14dfe1ae8e63b881fa12",
+  "ci_url": "https://github.com/chenz9000/StabilityConsole/actions/runs/44327823789",
+  "ci_outcome": "success",
+  "controlled_test_count": 39,
+  "windows": {
+    "python": "3.14",
+    "launcher_tests": "PASS",
+    "real_tk_workflow": "PASS"
+  },
+  "linux": {
+    "python": "3.12",
+    "launcher_tests": "PASS",
+    "real_tk_workflow": "PASS (Xvfb)"
+  },
+  "live_gmail_authorization": "UNKNOWN on the user's account; collector results in tests are controlled fixtures",
+  "user_windows11_installation": "UNKNOWN; CI Windows execution is not verification of the user's computer",
+  "private_application_data_added_by_this_change": false
+}

@@ -9,8 +9,8 @@ from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlencode, urlparse
 
-VERSION = '0.2.1'
-STATUSES = ('Discovered', 'Saved', 'Preparing', 'Applied', 'Acknowledged', 'Replied', 'Interview scheduled', 'Interviewed', 'Offer', 'Rejected', 'Withdrawn', 'Expired', 'Unknown')
+VERSION = '0.3.0'
+STATUSES = ('Discovered', 'Saved', 'Preparing', 'Draft', 'Blocked', 'Sent', 'Applied', 'Acknowledged', 'Replied', 'Interview scheduled', 'Interviewed', 'Offer', 'Rejected', 'Withdrawn', 'Failed', 'Expired', 'Unknown')
 PRIORITIES = ('Urgent', 'High', 'Normal', 'Low')
 
 def data_dir():
@@ -128,7 +128,8 @@ def metrics(conn):
     all_app=conn.execute('SELECT status,COUNT(*) count FROM applications GROUP BY status').fetchall()
     counts={r['status']:r['count'] for r in all_app}
     open_tasks=conn.execute('SELECT COUNT(*) FROM tasks WHERE done=0').fetchone()[0]
-    return {'total':sum(counts.values()),'applied':counts.get('Applied',0)+counts.get('Acknowledged',0)+counts.get('Replied',0)+counts.get('Interview scheduled',0)+counts.get('Interviewed',0)+counts.get('Offer',0)+counts.get('Rejected',0),'interviews':counts.get('Interview scheduled',0)+counts.get('Interviewed',0),'tasks':open_tasks}
+    progressed=('Sent','Applied','Acknowledged','Replied','Interview scheduled','Interviewed','Offer','Rejected','Withdrawn')
+    return {'total':sum(counts.values()),'applied':sum(counts.get(s,0) for s in progressed),'interviews':counts.get('Interview scheduled',0)+counts.get('Interviewed',0),'tasks':open_tasks}
 
 def search_urls(areas,keywords=''):
     # Browser searches, not scrape claims. No network request is performed here.
