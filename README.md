@@ -1,8 +1,16 @@
-# StabilityConsole v0.3.0
+# StabilityConsole v0.3.1
 
 Windows desktop application for application tracking, confirmed profile details, document review, job-search sessions and semi-active Gmail synchronization. Gmail checks run only while the app is open. Closing the app stops sync; no service, startup task or cloud worker is installed.
 
-**Open `Launch-StabilityConsole.bat` at the repository root.** Pull the latest repository first. The source folder retains its historical `StabilityConsole-v0.1.0` name for compatibility; the code inside is now v0.3.0. The existing v0.1.0 ZIP is historical and does not contain this update.
+**Open `Launch-StabilityConsole.bat` at the repository root.** Pull the latest repository first. The source folder retains its historical `StabilityConsole-v0.1.0` name for compatibility; the code inside is now v0.3.1. The existing v0.1.0 ZIP is historical and does not contain this update.
+
+## Matrix workspace
+
+Version 0.3.1 replaces the previous red-and-brass palette with a modern black-and-green workspace. A persistent sidebar gives every main page a visible entry. The overview separates applications, progress, interviews and open actions into four cards. Dark surfaces, mint accents, readable body text, alternating table rows and visible keyboard focus carry through the forms, profile/document workflow and Gmail setup. Subtle code-inspired branding is static so the screen stays calm while you work.
+
+Use **Job-search workflow → Import session report** to load your private report after pulling the app update. Software updates and report imports are separate operations. No private candidate report belongs in this repository.
+
+The shared palette and control states live in `StabilityConsole-v0.1.0/theme.py`. The visual direction for future interface changes is Matrix-inspired black and green; red/brass styling is retired. Verification screenshots use temporary demonstration records only.
 
 
 ## Track job search sessions
