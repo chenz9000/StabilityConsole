@@ -1,8 +1,16 @@
-# StabilityConsole v0.3.0
+# StabilityConsole v0.3.1
 
 Windows desktop application for application tracking, confirmed profile details, document review, job-search sessions and semi-active Gmail synchronization. Gmail checks run only while the app is open. Closing the app stops sync; no service, startup task or cloud worker is installed.
 
-**Open `Launch-StabilityConsole.bat` at the repository root.** Pull the latest repository first. The source folder retains its historical `StabilityConsole-v0.1.0` name for compatibility; the code inside is now v0.3.0. The existing v0.1.0 ZIP is historical and does not contain this update.
+**Open `Launch-StabilityConsole.bat` at the repository root.** Pull the latest repository first. The source folder retains its historical `StabilityConsole-v0.1.0` name for compatibility; the code inside is now v0.3.1. The existing v0.1.0 ZIP is historical and does not contain this update.
+
+## Matrix workspace
+
+Version 0.3.1 replaces the previous red-and-brass palette with a modern black-and-green workspace. A persistent sidebar gives every main page a visible entry. The overview separates applications, progress, interviews and open actions into four cards. Dark surfaces, mint accents, readable body text, alternating table rows and visible keyboard focus carry through the forms, profile/document workflow and Gmail setup. Subtle code-inspired branding is static so the screen stays calm while you work.
+
+Use **Job-search workflow → Import session report** to load your private report after pulling the app update. Software updates and report imports are separate operations. No private candidate report belongs in this repository.
+
+The shared palette and control states live in `StabilityConsole-v0.1.0/theme.py`. The visual direction for future interface changes is Matrix-inspired black and green; red/brass styling is retired. Verification screenshots use temporary demonstration records only.
 
 
 ## Track job search sessions
@@ -58,11 +66,11 @@ Disconnect removes local stored token access and disables auto sync; historical 
 - **INSPECTED:** the current Tk/SQLite application and existing read-only Gmail collector.
 - **IMPLEMENTED:** private report import, stable application links and submission evidence, confirmed profile fields, document revision approval, five-minute session mail checks and recovery/cancellation. Existing Gmail setup, manual status review and public-advert lookup remain available.
 - **TESTED:** 39 controlled tests through the launcher. Coverage includes real SQLite migration backups and rollback, repeated imports, preservation of local edits and missing fields, separate failed-delivery/withdrawal states, exact-hash approvals, delayed checks, restart recovery and partial/failed/cancelled collection. Network responses in these tests are controlled fixtures.
-- **TESTED on Windows with Python 3.14 and Linux with Python 3.12:** the exact Windows batch launcher checks and real Tk GUI workflow; report import twice through the interface, profile/document rows, an unconfigured-mail blocker, shutdown and database reopening. [CI evidence](https://github.com/chenz9000/StabilityConsole/actions/runs/44327823789) and [verification record](verification-v0.3.0.json). These are actual runner executions, not syntax-only checks.
+- **TESTED on Windows with Python 3.14 and Linux with Python 3.12:** the exact Windows batch launcher checks and real Tk GUI workflow; sidebar navigation, dashboard totals, application forms, Gmail setup, report import twice, profile/document rows, small-window action visibility, an unconfigured-mail blocker, shutdown and database reopening. [CI evidence](https://github.com/chenz9000/StabilityConsole/actions/runs/44733184036) and [verification record](verification-v0.3.1.json). These are actual runner executions, not syntax-only checks.
 - **UNKNOWN on the user's target:** Windows 11 installation, Google OAuth/DPAPI and live Gmail/browser operation with the user's account. CI success is not proof those external prerequisites have been completed.
 
-Offline tracking needs Python with Tcl/Tk. Integration setup needs Python 3.11+ and an installed Edge/Chrome browser. No private reports, credentials, mail data or local databases belong in this public repository. Source checksums use canonical UTF-8 text with LF line endings, as described in [the source manifest](source-manifest-v0.3.0.json).
+Offline tracking needs Python with Tcl/Tk. Integration setup needs Python 3.11+ and an installed Edge/Chrome browser. No private reports, credentials, mail data or local databases belong in this public repository. Source checksums use canonical UTF-8 text with LF line endings, as described in [the source manifest](source-manifest-v0.3.1.json).
 
 ## Management summary
 
-Version 0.3.0 brings externally completed job-search work into the local register, keeps confirmed facts and document approvals with their evidence, and schedules a mailbox check five minutes after session completion. Failed attempts do not count as sent applications. Existing records are backed up and preserved. The Windows lock-contention error discovered during target checks is fixed. Controlled and GUI checks pass on Windows and Linux; live account setup remains an external verification step.
+Version 0.3.1 replaces red-and-brass styling with a shared Matrix-inspired theme, a sidebar and four overview cards. Forms, dropdowns, tables and Gmail setup use the same palette; small-window layouts reserve space for action buttons. All 39 existing controlled checks and real GUI checks pass on Windows and Linux. Import, document approval, mail evidence and restart preservation remain verified by those workflows. Live Gmail setup on the user’s own computer remains unverified.

@@ -1,4 +1,4 @@
-"""Stability Console v0.3.0. Read-only Gmail checks run while this app is open."""
+"""Stability Console v0.3.1. Read-only Gmail checks run while this app is open."""
 import logging
 import sys
 import tkinter as tk
@@ -9,7 +9,8 @@ import webbrowser
 from core import (VERSION,STATUSES,PRIORITIES,data_dir,preflight,connect,add_application,update_application,
     applications,add_task,tasks,set_task_done,due_items,metrics,search_urls,export_csv,backup)
 
-BG='#150e0e'; PANEL='#241716'; FIELD='#352221'; RED='#a92e2c'; GOLD='#d6a36a'; FG='#f5e9e3'; MUTED='#b7a5a0'
+from theme import (BG, PANEL, FIELD, SIDEBAR, BORDER, ACCENT, FG, MUTED, SELECT,
+                   apply_theme, button, stripe_rows, wrap_labels)
 
 from gmail_panel import GmailPanel
 from workflow_panel import WorkflowPanel
@@ -19,56 +20,97 @@ from mail_sync import SyncError
 class Window(WorkflowPanel, GmailPanel, tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title('STABILITY CONSOLE | Local Career & Life Tracker v'+VERSION)
-        self.geometry('1120x735');self.minsize(840,570);self.configure(bg=BG)
+        self.title('StabilityConsole | Career workspace v'+VERSION)
+        min_width=min(1040,max(840,self.winfo_screenwidth()-40))
+        min_height=min(680,max(570,self.winfo_screenheight()-140))
+        width=max(min_width,min(1360,self.winfo_screenwidth()-80))
+        height=max(min_height,min(820,self.winfo_screenheight()-140))
+        self.geometry(f'{width}x{height}');self.minsize(min_width,min_height);self.configure(bg=BG)
         self.root_dir=data_dir(); self.root_dir.mkdir(parents=True,exist_ok=True)
         self.conn=connect(self.root_dir/'stability.db')
         self.protocol('WM_DELETE_WINDOW',self.close)
         self.configure_styles()
-        head=tk.Frame(self,bg=BG);head.pack(fill='x',padx=18,pady=(14,5))
-        tk.Label(head,text='STABILITY CONSOLE',font=('Segoe UI',20,'bold'),bg=BG,fg=GOLD).pack(side='left')
-        tk.Label(head,text='PRIVATE • LOCAL DATA • EVIDENCE-LED',font=('Segoe UI',9),bg=BG,fg=MUTED).pack(side='right')
-        self.notebook=ttk.Notebook(self);self.notebook.pack(fill='both',expand=True,padx=16,pady=8)
+        self.status=tk.StringVar(value='Local database: '+str(self.root_dir/'stability.db'))
+        self.build_shell()
         self.overview=ttk.Frame(self.notebook);self.apps=ttk.Frame(self.notebook);self.todo=ttk.Frame(self.notebook);self.discovery=ttk.Frame(self.notebook)
         for page,name in [(self.overview,'Overview'),(self.apps,'Applications'),(self.todo,'Daily actions'),(self.discovery,'Browser job search')]:self.notebook.add(page,text=name)
         self.build_overview();self.build_apps();self.build_tasks();self.build_discovery()
-        self.status=tk.StringVar(value='Local database: '+str(self.root_dir/'stability.db'))
-        tk.Label(self,textvariable=self.status,bg=BG,fg=MUTED,anchor='w',font=('Segoe UI',9)).pack(fill='x',padx=18,pady=(0,8))
         self.refresh_all()
         self.build_gmail()
         self.build_workflow()
+        self.build_navigation()
+        wrap_labels(self)
         if not (self.root_dir/'readme_seen.flag').exists():
             self.after(250,self.first_run)
     def configure_styles(self):
-        style=ttk.Style(self);style.theme_use('clam')
-        style.configure('TFrame',background=BG)
-        style.configure('TNotebook',background=BG,borderwidth=0)
-        style.configure('TNotebook.Tab',background=PANEL,foreground=FG,padding=(18,10),font=('Segoe UI',10))
-        style.map('TNotebook.Tab',background=[('selected',RED)])
-        style.configure('Treeview',background=PANEL,foreground=FG,fieldbackground=PANEL,rowheight=30,borderwidth=0,font=('Segoe UI',10))
-        style.map('Treeview',background=[('selected',RED)])
-        style.configure('Treeview.Heading',background=FIELD,foreground=GOLD,font=('Segoe UI',10,'bold'))
-        style.configure('TCombobox',fieldbackground=FIELD,background=FIELD,foreground='#211515')
-        style.configure('TScrollbar',background=PANEL)
-    def button(self,parent,text,command):
-        return tk.Button(parent,text=text,command=command,bg=RED,fg='white',activebackground='#cf463d',activeforeground='white',relief='flat',padx=15,pady=9,font=('Segoe UI',10,'bold'),cursor='hand2')
+        self.style=apply_theme(self)
+    def build_shell(self):
+        tk.Label(self,textvariable=self.status,bg=BG,fg=MUTED,anchor='w',font=('Segoe UI',9)).pack(side='bottom',fill='x',padx=20,pady=(0,8))
+        head=tk.Frame(self,bg=BG);head.pack(fill='x',padx=24,pady=(20,16))
+        mark=tk.Canvas(head,width=40,height=40,bg=BG,highlightthickness=0)
+        mark.pack(side='left',padx=(0,12))
+        for x,top,bottom,color in [(6,11,34,BORDER),(15,3,29,ACCENT),(24,11,37,SELECT),(33,5,24,ACCENT)]:
+            mark.create_line(x,top,x,bottom,fill=color,width=3)
+        brand=tk.Frame(head,bg=BG);brand.pack(side='left')
+        tk.Label(brand,text='STABILITY / CONSOLE',font=('Consolas',17,'bold'),bg=BG,fg=FG,anchor='w').pack(anchor='w')
+        tk.Label(brand,text='A clearer path to your next opportunity',font=('Segoe UI',10),bg=BG,fg=MUTED).pack(anchor='w',pady=(3,0))
+        tk.Label(head,text='PRIVATE WORKSPACE  /  v'+VERSION,font=('Consolas',9),bg=PANEL,fg=ACCENT,padx=12,pady=8).pack(side='right')
+        shell=tk.Frame(self,bg=BG);shell.pack(fill='both',expand=True,padx=20,pady=(0,12))
+        self.sidebar=tk.Frame(shell,bg=SIDEBAR,width=180,highlightbackground=BORDER,highlightthickness=1)
+        self.sidebar.pack(side='left',fill='y',padx=(0,18));self.sidebar.pack_propagate(False)
+        self.notebook=ttk.Notebook(shell,style='Shell.TNotebook');self.notebook.pack(side='left',fill='both',expand=True)
+    def build_navigation(self):
+        tk.Label(self.sidebar,text='WORKSPACE',bg=SIDEBAR,fg=MUTED,font=('Consolas',9),anchor='w').pack(fill='x',padx=16,pady=(20,14))
+        self.nav_buttons={}
+        pages=[(self.overview,'Overview'),(self.apps,'Applications'),(self.workflow,'Job-search workflow'),
+               (self.gmail,'Gmail & evidence'),(self.todo,'Daily actions'),(self.discovery,'Browser job search')]
+        for page,title in pages:
+            control=tk.Button(self.sidebar,text=title,command=lambda p=page:self.notebook.select(p),
+                anchor='w',bg=SIDEBAR,fg=MUTED,activebackground=FIELD,activeforeground=ACCENT,
+                font=('Segoe UI',10),relief='flat',borderwidth=0,padx=14,pady=13,
+                highlightthickness=1,highlightbackground=SIDEBAR,highlightcolor=ACCENT,
+                cursor='hand2',takefocus=True)
+            control.pack(fill='x',padx=8,pady=3)
+            self.nav_buttons[str(page)]=control
+        tk.Label(self.sidebar,text='YOUR NEXT STEP\nKeep moving forward.',bg=SIDEBAR,fg=MUTED,
+                 font=('Segoe UI',9),justify='left',anchor='w').pack(side='bottom',fill='x',padx=16,pady=20)
+        self.notebook.bind('<<NotebookTabChanged>>',self.update_navigation,add='+')
+        self.notebook.enable_traversal()
+        self.update_navigation()
+    def update_navigation(self,event=None):
+        current=self.notebook.select()
+        for page,control in self.nav_buttons.items():
+            selected=page==current
+            control.configure(bg=SELECT if selected else SIDEBAR,fg=ACCENT if selected else MUTED,
+                              font=('Segoe UI',10,'bold' if selected else 'normal'))
+    def button(self,parent,text,command,primary=False):
+        return button(parent,text,command,primary)
     def label(self,parent,text,large=False):
-        return tk.Label(parent,text=text,bg=BG,fg=GOLD if large else FG,font=('Segoe UI',14 if large else 10,'bold' if large else 'normal'),anchor='w')
+        return tk.Label(parent,text=text,bg=BG,fg=FG,font=('Segoe UI',18 if large else 10,'bold' if large else 'normal'),anchor='w')
     def build_overview(self):
         f=self.overview
-        self.label(f,'YOUR NEXT REAL ACTION',True).pack(fill='x',padx=14,pady=12)
-        self.metric_label=tk.Label(f,bg=PANEL,fg=FG,font=('Segoe UI',13),padx=16,pady=15,anchor='w',justify='left')
-        self.metric_label.pack(fill='x',padx=14)
-        self.label(f,'Due or overdue follow-ups and actions',True).pack(fill='x',padx=14,pady=(20,8))
-        self.due_box=tk.Listbox(f,bg=PANEL,fg=FG,selectbackground=RED,relief='flat',font=('Segoe UI',11),height=13)
-        self.due_box.pack(fill='both',expand=True,padx=14,pady=(0,12))
-        buttons=tk.Frame(f,bg=BG);buttons.pack(fill='x',padx=14,pady=(0,12))
-        self.button(buttons,'Add application',lambda:self.notebook.select(self.apps)).pack(side='left',padx=(0,8))
+        self.label(f,'Your next opportunity starts here',True).pack(fill='x',padx=14,pady=(12,5))
+        tk.Label(f,text='Your applications, interviews and next actions in one place.',bg=BG,fg=MUTED,anchor='w').pack(fill='x',padx=14,pady=(0,20))
+        cards=tk.Frame(f,bg=BG);cards.pack(fill='x',padx=14)
+        self.metric_values={}
+        for index,(key,title) in enumerate([('total','APPLICATIONS'),('applied','SENT / PROGRESSED'),('interviews','INTERVIEWS'),('tasks','OPEN ACTIONS')]):
+            cards.columnconfigure(index,weight=1,uniform='metrics')
+            card=tk.Frame(cards,bg=PANEL,highlightbackground=BORDER,highlightthickness=1)
+            card.grid(row=0,column=index,sticky='nsew',padx=(0,10 if index<3 else 0))
+            value=tk.StringVar(value='0');self.metric_values[key]=value
+            tk.Label(card,text=title,bg=PANEL,fg=MUTED,font=('Segoe UI',9),anchor='w').pack(fill='x',padx=16,pady=(16,4))
+            tk.Label(card,textvariable=value,bg=PANEL,fg=ACCENT,font=('Consolas',30,'bold'),anchor='w').pack(fill='x',padx=16,pady=(0,14))
+        self.label(f,'Next actions',True).pack(fill='x',padx=14,pady=(24,4))
+        tk.Label(f,text='Due and overdue follow-ups appear here.',bg=BG,fg=MUTED,anchor='w').pack(fill='x',padx=14,pady=(0,12))
+        self.due_box=tk.Listbox(f,bg=PANEL,fg=FG,selectbackground=SELECT,relief='flat',font=('Segoe UI',11),height=10)
+        self.due_box.pack(fill='both',expand=True,padx=14,pady=(0,16),ipadx=10,ipady=10)
+        buttons=tk.Frame(f,bg=BG);buttons.pack(side='bottom',before=self.due_box,fill='x',padx=14,pady=(0,12))
+        self.button(buttons,'Add application',lambda:self.notebook.select(self.apps),primary=True).pack(side='left',padx=(0,8))
         self.button(buttons,'Add daily action',lambda:self.notebook.select(self.todo)).pack(side='left')
         self.button(buttons,'Backup database',self.save_backup).pack(side='right')
     def build_apps(self):
         f=self.apps;top=tk.Frame(f,bg=BG);top.pack(fill='x',padx=12,pady=10)
-        self.label(top,'APPLICATION REGISTER',True).pack(side='left')
+        self.label(top,'Applications',True).pack(side='left')
         self.app_filter=tk.StringVar();tk.Entry(top,textvariable=self.app_filter,width=27,bg=FIELD,fg=FG,insertbackground=FG,relief='flat').pack(side='right',padx=8,ipady=7)
         tk.Label(top,text='Filter:',bg=BG,fg=MUTED).pack(side='right')
         self.app_filter.trace_add('write',lambda *_:self.refresh_apps())
@@ -80,8 +122,8 @@ class Window(WorkflowPanel, GmailPanel, tk.Tk):
         self.app_tree.pack(fill='both',expand=True,side='left')
         ttk.Scrollbar(frame,orient='vertical',command=self.app_tree.yview).pack(side='right',fill='y')
         self.app_tree.bind('<Double-1>',lambda e:self.edit_application())
-        buttons=tk.Frame(f,bg=BG);buttons.pack(fill='x',padx=12,pady=12)
-        self.button(buttons,'New application',lambda:self.application_dialog()).pack(side='left',padx=(0,8))
+        buttons=tk.Frame(f,bg=BG);buttons.pack(side='bottom',before=frame,fill='x',padx=12,pady=12)
+        self.button(buttons,'New application',lambda:self.application_dialog(),primary=True).pack(side='left',padx=(0,8))
         self.button(buttons,'Edit selected',self.edit_application).pack(side='left',padx=(0,8))
         self.button(buttons,'Open source',self.open_source).pack(side='left',padx=(0,8))
         self.button(buttons,'Export CSV',self.export).pack(side='right')
@@ -124,7 +166,7 @@ class Window(WorkflowPanel, GmailPanel, tk.Tk):
             if not row['url']:messagebox.showinfo('Missing URL','No source URL has been recorded for this application.');return
             webbrowser.open(row['url'])
     def build_tasks(self):
-        f=self.todo;self.label(f,'DAILY ACTIONS',True).pack(fill='x',padx=12,pady=12)
+        f=self.todo;self.label(f,'Daily actions',True).pack(fill='x',padx=12,pady=12)
         frame=tk.Frame(f,bg=BG);frame.pack(fill='both',expand=True,padx=12)
         cols=('title','category','priority','due_date','done')
         self.task_tree=ttk.Treeview(frame,columns=cols,show='headings',selectmode='browse')
@@ -132,7 +174,7 @@ class Window(WorkflowPanel, GmailPanel, tk.Tk):
             self.task_tree.heading(col,text=label);self.task_tree.column(col,width=width,minwidth=65)
         self.task_tree.pack(fill='both',expand=True,side='left')
         ttk.Scrollbar(frame,orient='vertical',command=self.task_tree.yview).pack(side='right',fill='y')
-        buttons=tk.Frame(f,bg=BG);buttons.pack(fill='x',padx=12,pady=12)
+        buttons=tk.Frame(f,bg=BG);buttons.pack(side='bottom',before=frame,fill='x',padx=12,pady=12)
         self.button(buttons,'New action',self.task_dialog).pack(side='left',padx=(0,8))
         self.button(buttons,'Mark done / reopen',self.toggle_task).pack(side='left')
         self.show_done=tk.BooleanVar(value=False)
@@ -157,7 +199,7 @@ class Window(WorkflowPanel, GmailPanel, tk.Tk):
         row=self.conn.execute('SELECT * FROM tasks WHERE id=?',(int(sel[0]),)).fetchone()
         if row:set_task_done(self.conn,row['id'],not row['done']);self.refresh_all()
     def build_discovery(self):
-        f=self.discovery;self.label(f,'SEARCH IN YOUR OWN BROWSER',True).pack(fill='x',padx=12,pady=(16,8))
+        f=self.discovery;self.label(f,'Find your next role',True).pack(fill='x',padx=12,pady=(16,8))
         tk.Label(f,text='These buttons open real searches in Chrome/Edge or your default browser. They do NOT scrape, verify, or import listings.\nOnly add an application after reviewing its original advertisement.',bg=BG,fg=MUTED,justify='left',font=('Segoe UI',10)).pack(fill='x',padx=12,pady=8)
         self.area_var=tk.StringVar(value='Knysna, George, Plettenberg Bay')
         self.keyword_var=tk.StringVar()
@@ -166,10 +208,10 @@ class Window(WorkflowPanel, GmailPanel, tk.Tk):
             tk.Entry(f,textvariable=var,bg=FIELD,fg=FG,insertbackground=FG,relief='flat',font=('Segoe UI',11)).pack(fill='x',padx=12,ipady=10)
         buttons=tk.Frame(f,bg=BG);buttons.pack(fill='x',padx=12,pady=14)
         self.button(buttons,'Prepare browser searches',self.prepare_searches).pack(side='left')
-        self.search_box=tk.Listbox(f,bg=PANEL,fg=FG,relief='flat',font=('Segoe UI',11),height=11,selectbackground=RED)
+        self.search_box=tk.Listbox(f,bg=PANEL,fg=FG,relief='flat',font=('Segoe UI',11),height=11,selectbackground=SELECT)
         self.search_box.pack(fill='both',expand=True,padx=12,pady=8)
         self.search_box.bind('<Double-1>',lambda e:self.open_search())
-        self.button(f,'Open selected browser search',self.open_search).pack(anchor='e',padx=12,pady=12)
+        self.button(f,'Open selected browser search',self.open_search).pack(side='bottom',before=self.search_box,anchor='e',padx=12,pady=12)
         self.links=[]
     def prepare_searches(self):
         try:self.links=search_urls(self.area_var.get(),self.keyword_var.get())
@@ -189,12 +231,14 @@ class Window(WorkflowPanel, GmailPanel, tk.Tk):
     def refresh_apps(self):
         for row in self.app_tree.get_children():self.app_tree.delete(row)
         for item in applications(self.conn,self.app_filter.get()):self.app_tree.insert('', 'end',iid=str(item['id']),values=tuple(item[c] for c in ('title','employer','area','status','due_date','cv_version')))
+        stripe_rows(self.app_tree)
     def refresh_tasks(self):
         for row in self.task_tree.get_children():self.task_tree.delete(row)
         for item in tasks(self.conn,self.show_done.get()):self.task_tree.insert('','end',iid=str(item['id']),values=(item['title'],item['category'],item['priority'],item['due_date'],'Yes' if item['done'] else 'No'))
+        stripe_rows(self.task_tree)
     def refresh_overview(self):
         info=metrics(self.conn);a,b=due_items(self.conn)
-        self.metric_label.config(text=f"Applications recorded: {info['total']}      Applied or progressed: {info['applied']}      Interviews: {info['interviews']}      Open actions: {info['tasks']}")
+        for key,value in self.metric_values.items():value.set(str(info[key]))
         self.due_box.delete(0,'end')
         for item in a:self.due_box.insert('end',f"ACTION  |  {item['due_date']}  |  {item['title']}")
         for item in b:self.due_box.insert('end',f"FOLLOW UP  |  {item['due_date']}  |  {item['title']} ({item['employer']})")

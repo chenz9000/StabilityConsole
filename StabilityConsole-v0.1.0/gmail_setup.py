@@ -12,7 +12,7 @@ import webbrowser
 from mail_sync import SCOPE, SyncError, atomic_write, stamp
 from integration_runtime import runtime_ready, runtime_paths, InstanceLock
 
-BG='#150e0e'; PANEL='#241716'; FG='#f5e9e3'; GOLD='#d6a36a'; MUTED='#b7a5a0'
+from theme import BG, PANEL, FIELD, ACCENT, FG, MUTED, stripe_rows, wrap_labels
 CHECKPOINT='gmail-setup-progress.json'
 GOOGLE_STEPS=(
     ('Choose your Google project',
@@ -91,7 +91,7 @@ class GmailSetup(tk.Toplevel):
         self.title('Set up Gmail — StabilityConsole');self.geometry('780x620');self.minsize(660,560)
         self.configure(bg=BG);self.transient(app);self.protocol('WM_DELETE_WINDOW',self.dismiss)
         state=checkpoint(app.root_dir);self.google_step=state['google_step'];save_checkpoint(app.root_dir,True,self.google_step)
-        tk.Label(self,text='SET UP GMAIL',font=('Segoe UI',19,'bold'),bg=BG,fg=GOLD).pack(anchor='w',padx=24,pady=(20,5))
+        tk.Label(self,text='Set up Gmail',font=('Segoe UI',19,'bold'),bg=BG,fg=ACCENT).pack(anchor='w',padx=24,pady=(20,5))
         self.title_text=tk.StringVar();self.body_text=tk.StringVar();self.evidence_text=tk.StringVar()
         tk.Label(self,textvariable=self.title_text,font=('Segoe UI',14,'bold'),bg=BG,fg=FG,anchor='w').pack(fill='x',padx=24,pady=(8,12))
         body_frame=tk.Frame(self,bg=PANEL);body_frame.pack(fill='both',expand=True,padx=24)
@@ -102,7 +102,7 @@ class GmailSetup(tk.Toplevel):
         self.last_body=None
 
         self.copy_text=tk.StringVar()
-        self.copy_label=tk.Label(self,textvariable=self.copy_text,bg=BG,fg=GOLD,justify='left',wraplength=690,font=('Segoe UI',10))
+        self.copy_label=tk.Label(self,textvariable=self.copy_text,bg=BG,fg=ACCENT,justify='left',wraplength=690,font=('Segoe UI',10))
         self.copy_label.pack(fill='x',padx=24,pady=6)
         tk.Label(self,textvariable=app.mail_status,bg=BG,fg=MUTED,wraplength=690,justify='left',font=('Segoe UI',9)).pack(fill='x',padx=24,pady=5)
         tk.Label(self,textvariable=self.evidence_text,bg=BG,fg=MUTED,wraplength=690,justify='left',font=('Segoe UI',9)).pack(fill='x',padx=24,pady=5)
@@ -114,6 +114,7 @@ class GmailSetup(tk.Toplevel):
         row=tk.Frame(self,bg=BG);row.pack(fill='x',padx=24,pady=(0,18))
         self.import_button=app.button(row,'Choose downloaded Google file',self.pick_client);self.import_button.pack(side='left')
         app.button(row,'Set up later',self.dismiss).pack(side='right')
+        wrap_labels(self)
         self.refresh();self.after(250,self.tick)
 
     def phase(self):return setup_phase(self.app.root_dir,verified=getattr(self.app,'mail_verified',False))

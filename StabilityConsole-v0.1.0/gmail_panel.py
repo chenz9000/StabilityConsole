@@ -14,7 +14,7 @@ from mail_sync import (AppWorker, SyncError, DEFAULTS, credentials, GmailClient,
                        init_mail, read_settings, save_settings, sync_mail, stamp, normal)
 from integration_runtime import runtime_ready, install_runtime, browser_enrich, kill_tree
 
-BG='#150e0e'; PANEL='#241716'; FIELD='#352221'; GOLD='#d6a36a'; FG='#f5e9e3'; MUTED='#b7a5a0'
+from theme import BG, PANEL, FIELD, ACCENT, FG, MUTED, stripe_rows, wrap_labels
 
 
 def apply_lookup(conn, account, message_id, app_id, result, manual=False):
@@ -63,11 +63,11 @@ class GmailPanel:
         except SyncError as e:self.mail_settings=DEFAULTS.copy();messagebox.showerror('Gmail settings',str(e))
         self.gmail=ttk.Frame(self.notebook);self.notebook.add(self.gmail,text='Gmail & advert evidence')
         f=self.gmail
-        self.label(f,'GMAIL / SEMI-ACTIVE SYNC',True).pack(fill='x',padx=12,pady=(12,5))
+        self.label(f,'Gmail & advert evidence',True).pack(fill='x',padx=12,pady=(12,5))
         last=self.conn.execute('SELECT * FROM mail_runs ORDER BY rowid DESC LIMIT 1').fetchone()
         previous=(' Last recorded run: '+last['outcome']+' at '+last['finished_at']+' (historical).') if last else ''
         self.mail_status=tk.StringVar(value='UNKNOWN — Gmail has not been checked in this app session.'+previous)
-        tk.Label(f,textvariable=self.mail_status,bg=PANEL,fg=GOLD,wraplength=1040,justify='left',anchor='w',padx=12,pady=10).pack(fill='x',padx=12)
+        tk.Label(f,textvariable=self.mail_status,bg=PANEL,fg=ACCENT,wraplength=1040,justify='left',anchor='w',padx=12,pady=10).pack(fill='x',padx=12)
         self.mail_preflight=tk.StringVar()
         tk.Label(f,textvariable=self.mail_preflight,bg=BG,fg=MUTED,wraplength=1040,justify='left',anchor='w').pack(fill='x',padx=12,pady=5)
         row=tk.Frame(f,bg=BG);row.pack(fill='x',padx=12,pady=5)
@@ -80,11 +80,12 @@ class GmailPanel:
         self.mail_days=tk.StringVar(value=str(self.mail_settings['lookback_days']))
         self.mail_browser=tk.StringVar(value=self.mail_settings['browser'])
         tk.Checkbutton(row,text='Sync while app is open',variable=self.mail_auto,bg=BG,fg=FG,selectcolor=FIELD).pack(side='left')
+        self.button(row,'Save sync settings',self.mail_save).pack(side='right')
+        row=tk.Frame(f,bg=BG);row.pack(fill='x',padx=12,pady=5)
         self.label(row,'Every (minutes)').pack(side='left',padx=(10,4))
         tk.Spinbox(row,from_=1,to=120,textvariable=self.mail_interval,width=4,bg=FIELD,fg=FG).pack(side='left')
         self.label(row,'Initial history (days)').pack(side='left',padx=(10,4))
         tk.Spinbox(row,from_=1,to=3650,textvariable=self.mail_days,width=5,bg=FIELD,fg=FG).pack(side='left')
-        self.button(row,'Save sync settings',self.mail_save).pack(side='right')
         row=tk.Frame(f,bg=BG);row.pack(fill='x',padx=12,pady=5)
         tk.Checkbutton(row,text='After sync: browser lookup + fill corroborated blank fields',variable=self.mail_enrich,bg=BG,fg=FG,selectcolor=FIELD).pack(side='left')
         ttk.Combobox(row,textvariable=self.mail_browser,values=('msedge','chrome'),state='readonly',width=9).pack(side='left',padx=8)
@@ -97,7 +98,7 @@ class GmailPanel:
         self.mail_tree.pack(side='left',fill='both',expand=True)
         scroll=ttk.Scrollbar(frame,orient='vertical',command=self.mail_tree.yview);scroll.pack(side='right',fill='y');self.mail_tree.configure(yscrollcommand=scroll.set)
         self.mail_rows={};self.mail_tree.bind('<Double-1>',lambda e:self.mail_review())
-        row=tk.Frame(f,bg=BG);row.pack(fill='x',padx=12,pady=(3,10))
+        row=tk.Frame(f,bg=BG);row.pack(side='bottom',before=frame,fill='x',padx=12,pady=(3,10))
         for label,command in [('Review selected message',self.mail_review),('Lookup selected advert',self.mail_lookup_selected),('Open public web search',self.mail_open_search)]:
             self.button(row,label,command).pack(side='left',padx=(0,6))
         self.refresh_mail();self.mail_check_preflight();self.after(200,self.mail_poll)
@@ -135,6 +136,7 @@ class GmailPanel:
         for i,row in enumerate(rows):
             key=str(i);self.mail_rows[key]=dict(row)
             self.mail_tree.insert('','end',iid=key,values=(row['received_at'],row['title'],row['subject'],row['confidence'],row['review_state'],row['lookup_state']))
+        stripe_rows(self.mail_tree)
 
     def mail_selected(self):
         selection=self.mail_tree.selection()

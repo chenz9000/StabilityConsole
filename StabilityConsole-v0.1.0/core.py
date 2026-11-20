@@ -9,7 +9,7 @@ from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlencode, urlparse
 
-VERSION = '0.3.0'
+VERSION = '0.3.1'
 STATUSES = ('Discovered', 'Saved', 'Preparing', 'Draft', 'Blocked', 'Sent', 'Applied', 'Acknowledged', 'Replied', 'Interview scheduled', 'Interviewed', 'Offer', 'Rejected', 'Withdrawn', 'Failed', 'Expired', 'Unknown')
 PRIORITIES = ('Urgent', 'High', 'Normal', 'Low')
 

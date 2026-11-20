@@ -1,0 +1,52 @@
+{
+  "version": "0.3.1",
+  "evidence_status": "TESTED",
+  "tested_code_commit": "c163bb09bb020ed6ebac907cadf4b4be4e41f994",
+  "ci_url": "https://github.com/chenz9000/StabilityConsole/actions/runs/44733184036",
+  "ci_outcome": "success",
+  "controlled_test_count": 39,
+  "windows": {
+    "python": "3.14",
+    "launcher_tests": "PASS",
+    "real_tk_workflow": "PASS",
+    "minimum_window_actions": "PASS"
+  },
+  "linux": {
+    "python": "3.12",
+    "launcher_tests": "PASS",
+    "real_tk_workflow": "PASS (Xvfb)",
+    "minimum_window_actions": "PASS"
+  },
+  "local_gui": {
+    "python": "3.13",
+    "tk": "8.6",
+    "real_tk_workflow": "PASS",
+    "screenshots_inspected": true
+  },
+  "visual_review": {
+    "windows_ci_screenshots_inspected": true,
+    "demonstration_data_only": true,
+    "selected_states_and_forms": "INSPECTED",
+    "contrast_ratio": {
+      "body_text": 16.53,
+      "secondary_text": 8.03,
+      "accent": 12.96,
+      "primary_button": 14.1,
+      "selected_row": 7.72
+    }
+  },
+  "coverage": [
+    "Sidebar page selection",
+    "Dashboard counts",
+    "Application form",
+    "Gmail setup wizard",
+    "Repeated report import",
+    "Delayed-check blocker",
+    "Restart persistence",
+    "Small-window primary and mail-review action visibility"
+  ],
+  "live_gmail_authorization": "UNKNOWN on the user account; mail processing tests use controlled fixtures",
+  "user_windows11_installation": "UNKNOWN; Windows CI does not verify the user computer",
+  "private_candidate_data_added": false,
+  "source_manifest": "source-manifest-v0.3.1.json"
+}

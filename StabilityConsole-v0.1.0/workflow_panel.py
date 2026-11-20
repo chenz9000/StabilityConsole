@@ -14,7 +14,7 @@ from job_workflow import (ensure_schema, recover_sessions, load_report, import_r
     report_summary, save_fact, FACT_STATES, link_document, approve_document, file_digest,
     start_session, complete_session, retry_check, due_check, check_result, parse_time)
 
-BG='#150e0e'; PANEL='#241716'; FIELD='#352221'; GOLD='#d6a36a'; FG='#f5e9e3'; MUTED='#b7a5a0'
+from theme import BG, PANEL, FIELD, ACCENT, FG, MUTED, stripe_rows, wrap_labels
 
 
 class WorkflowPanel:
@@ -27,11 +27,11 @@ class WorkflowPanel:
         self.workflow_after=None
         self.workflow=ttk.Frame(self.notebook)
         self.notebook.add(self.workflow,text='Job-search workflow')
-        self.label(self.workflow,'INCOME COMMAND / JOB-SEARCH WORKFLOW',True).pack(fill='x',padx=12,pady=(12,5))
+        self.label(self.workflow,'Job-search workflow',True).pack(fill='x',padx=12,pady=(12,5))
         self.workflow_status=tk.StringVar(value='Local records. Importing reports does not send applications or verify Gmail live.')
-        tk.Label(self.workflow,textvariable=self.workflow_status,bg=PANEL,fg=GOLD,anchor='w',justify='left',wraplength=1000,padx=10,pady=8).pack(fill='x',padx=12)
+        tk.Label(self.workflow,textvariable=self.workflow_status,bg=PANEL,fg=ACCENT,anchor='w',justify='left',wraplength=1000,padx=10,pady=8).pack(fill='x',padx=12)
         row=tk.Frame(self.workflow,bg=BG);row.pack(fill='x',padx=12,pady=7)
-        self.button(row,'Import session report',self.workflow_import).pack(side='left')
+        self.button(row,'Import session report',self.workflow_import,primary=True).pack(side='left')
         self.button(row,'Start session',self.workflow_start).pack(side='left',padx=5)
         self.button(row,'Complete session',self.workflow_complete).pack(side='left')
         row=tk.Frame(self.workflow,bg=BG);row.pack(fill='x',padx=12,pady=(0,5))
@@ -45,18 +45,18 @@ class WorkflowPanel:
         facts=ttk.Frame(tabs);tabs.add(facts,text='Confirmed profile')
         self.workflow_facts=self.workflow_table(facts,None,('name','value','state'),('Field','Value','Confirmation'),(200,500,150))
         self.workflow_facts.bind('<Double-1>',lambda _:self.workflow_edit_fact())
-        row=tk.Frame(facts,bg=BG);row.pack(fill='x',pady=5)
+        row=tk.Frame(facts,bg=BG);row.pack(side='bottom',before=self.workflow_facts.master,fill='x',pady=5)
         self.button(row,'Add / edit selected field',self.workflow_edit_fact).pack(side='left')
         docs=ttk.Frame(tabs);tabs.add(docs,text='Documents and approval')
         self.workflow_docs=self.workflow_table(docs,None,('name','state','hash'),('Document revision','Recorded review / send state','SHA-256 prefix'),(380,260,150))
-        row=tk.Frame(docs,bg=BG);row.pack(fill='x',pady=5)
+        row=tk.Frame(docs,bg=BG);row.pack(side='bottom',before=self.workflow_docs.master,fill='x',pady=5)
         self.button(row,'Link local file revision',self.workflow_link_document).pack(side='left')
         self.button(row,'Approve reviewed file',self.workflow_approve).pack(side='left',padx=5)
         self.button(row,'Show document evidence',self.workflow_show_document).pack(side='left')
         self.button(row,'Open local file',self.workflow_open_document).pack(side='left',padx=5)
         tk.Label(docs,text='Approval belongs to an exact file hash. Changed files need a new revision and review. Imported states are source-report evidence, not live file verification.',bg=BG,fg=MUTED,wraplength=1000,justify='left').pack(fill='x',pady=5)
         self.workflow_details=tk.Text(self.workflow,height=4,bg=PANEL,fg=FG,wrap='word',font=('Segoe UI',9))
-        self.workflow_details.pack(fill='x',padx=12,pady=(0,8));self.workflow_details.configure(state='disabled')
+        self.workflow_details.pack(side='bottom',before=tabs,fill='x',padx=12,pady=(0,8));self.workflow_details.configure(state='disabled')
         self.workflow_sessions.bind('<<TreeviewSelect>>',lambda _:self.workflow_session_detail())
         self.workflow_refresh()
         self.workflow_after=self.after(200,self.workflow_tick)
@@ -77,6 +77,7 @@ class WorkflowPanel:
         selected=tree.selection()
         tree.delete(*tree.get_children())
         for ident,values in items:tree.insert('','end',iid=str(ident),values=values)
+        stripe_rows(tree)
         if selected and tree.exists(selected[0]):tree.selection_set(selected[0])
 
     def workflow_refresh(self):

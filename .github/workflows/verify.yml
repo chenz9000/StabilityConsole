@@ -23,7 +23,17 @@ jobs:
           Launch-StabilityConsole.bat --self-test
       - name: Exercise real Tk workflow through launcher
         shell: cmd
-        run: Launch-StabilityConsole.bat --gui-self-test
+        env:
+          STABILITY_SCREENSHOT_DIR: ${{ github.workspace }}/ui-verification
+        run: |
+          py -3 -m pip install Pillow==12.0.0
+          Launch-StabilityConsole.bat --gui-self-test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: matrix-ui-windows
+          path: ui-verification
+          if-no-files-found: warn
   linux:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -39,4 +49,14 @@ jobs:
       - name: Run launcher checks
         run: python StabilityConsole-v0.1.0/launch.py --self-test
       - name: Exercise real Tk workflow
-        run: xvfb-run -a python StabilityConsole-v0.1.0/launch.py --gui-self-test
+        env:
+          STABILITY_SCREENSHOT_DIR: ${{ github.workspace }}/ui-verification
+        run: |
+          python -m pip install Pillow==12.0.0
+          xvfb-run -a -s '-screen 0 1600x1000x24' python StabilityConsole-v0.1.0/launch.py --gui-self-test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: matrix-ui-linux
+          path: ui-verification
+          if-no-files-found: warn
