@@ -1,0 +1,107 @@
+{
+  "version": "0.3.1",
+  "hash_mode": "SHA-256 of canonical UTF-8 text with LF line endings",
+  "tested_code_commit": "c163bb09bb020ed6ebac907cadf4b4be4e41f994",
+  "files": {
+    "AGENTS.md": {
+      "sha256": "73597817dbb63ab662da198091a0e478ef14d4d7aeb2af0169baf3362c55371b",
+      "canonical_bytes": 968
+    },
+    "README.md": {
+      "sha256": "7da77581df2cc31c50d4847e1e123b39c4d94e227cf30022efa2ac52def5cdea",
+      "canonical_bytes": 11913
+    },
+    "Launch-StabilityConsole.bat": {
+      "sha256": "ace3cec6cd7013f32949f0c66cb1bda2ed4d0a09472b308f0f9339dd8425ff52",
+      "canonical_bytes": 107
+    },
+    ".github/workflows/verify.yml": {
+      "sha256": "2ec2f9eb3b861206f0adacbf061209532dac586569579c24307cf3f17a9a2c98",
+      "canonical_bytes": 1914
+    },
+    "StabilityConsole-v0.1.0/Launch-StabilityConsole.bat": {
+      "sha256": "b873a7e3e4f9caaa0d80a21abbc931e4b1e9274e267b726dcdbd48242040721b",
+      "canonical_bytes": 480
+    },
+    "StabilityConsole-v0.1.0/README.md": {
+      "sha256": "93f1f3684762faf1d903eccbb89e1f037f44982fd1df51b91fbdea55a7b594d3",
+      "canonical_bytes": 596
+    },
+    "StabilityConsole-v0.1.0/requirements-integrations.txt": {
+      "sha256": "7ce2d7f023a686a49df7ed63cebce549033a0a1611a1f7924d82a26e1fa494bf",
+      "canonical_bytes": 298
+    },
+    "docs/session-report.md": {
+      "sha256": "288c505fdcaa42a09e11a293e22fd87c9d9fb8f0cdb4da776569eb10f58a673b",
+      "canonical_bytes": 5137
+    },
+    "verification-v0.3.1.json": {
+      "sha256": "b987fb31f15ab84530c2534920e67eed055a2adb66da302ed989f50092ff4ba7",
+      "canonical_bytes": 1566
+    },
+    "StabilityConsole-v0.1.0/app.py": {
+      "sha256": "5023657fa00fe4f36af398809180dbb341956e900a1f498f4b1b026192aa463b",
+      "canonical_bytes": 21463
+    },
+    "StabilityConsole-v0.1.0/browser_lookup.py": {
+      "sha256": "bcd4092d12c0224473820763f922e545d4bd1cc6b6c8a6f4cb7c5c6ba074bcd3",
+      "canonical_bytes": 13369
+    },
+    "StabilityConsole-v0.1.0/core.py": {
+      "sha256": "c698366c94ab9d986138c5849f0e3210091e5aad7841672f602189c85ca79a23",
+      "canonical_bytes": 9426
+    },
+    "StabilityConsole-v0.1.0/gmail_panel.py": {
+      "sha256": "eb6c520011c4f23926d138baf7c50b7ee4581b17fd8fe22a1af9a604d3825a64",
+      "canonical_bytes": 26115
+    },
+    "StabilityConsole-v0.1.0/gmail_setup.py": {
+      "sha256": "f2645e90552c79baa873582e54dd9a078e63a58432217ad2040589ce849464c4",
+      "canonical_bytes": 16278
+    },
+    "StabilityConsole-v0.1.0/integration_runtime.py": {
+      "sha256": "3f294b32bdc33cf4b7dacb20bd471197e4a692ec8d3fecf2ca99bcb8541e2b4a",
+      "canonical_bytes": 6094
+    },
+    "StabilityConsole-v0.1.0/job_workflow.py": {
+      "sha256": "39f809096beb4689df69602e13a7d7b7a060ef165d1af62cd2a55c85b23f25ce",
+      "canonical_bytes": 20257
+    },
+    "StabilityConsole-v0.1.0/launch.py": {
+      "sha256": "1a643a329339b0065b5efc4d49fb7462ff7b16bda1417756627491e68c73d2b3",
+      "canonical_bytes": 974
+    },
+    "StabilityConsole-v0.1.0/mail_sync.py": {
+      "sha256": "bc9dbf4466f4140fa6df8d94bab710b160212fc490ef3e1c94eac0e6114c60b8",
+      "canonical_bytes": 22849
+    },
+    "StabilityConsole-v0.1.0/tests/gui_smoke.py": {
+      "sha256": "f3fa60001050108b6c50a276b925ae816e253734809ce7b7d522c12b8da38ec4",
+      "canonical_bytes": 6250
+    },
+    "StabilityConsole-v0.1.0/tests/test_core.py": {
+      "sha256": "82472e979b146248772ed1904eff58f22bfe568555a09bf823c7bfc1a087a560",
+      "canonical_bytes": 2699
+    },
+    "StabilityConsole-v0.1.0/tests/test_gmail_setup.py": {
+      "sha256": "fcb20aefd0a19dfd0fa4ca5920e1fa65c84974baf9f276e26452943822eec96a",
+      "canonical_bytes": 3322
+    },
+    "StabilityConsole-v0.1.0/tests/test_job_workflow.py": {
+      "sha256": "5575ccd109056b4d234dd37a0b8c486277e7e3988e2670f779b42f03f50fe766",
+      "canonical_bytes": 11838
+    },
+    "StabilityConsole-v0.1.0/tests/test_mail_sync.py": {
+      "sha256": "0994f719f3bb71056f689b5ceb4dc553fcf03857c86cd5e4a4546eef023db266",
+      "canonical_bytes": 8590
+    },
+    "StabilityConsole-v0.1.0/theme.py": {
+      "sha256": "ca67206af99a1e214ca194dfc058842669b9b79cc1306e58f08a76091d19411a",
+      "canonical_bytes": 6202
+    },
+    "StabilityConsole-v0.1.0/workflow_panel.py": {
+      "sha256": "e88e6da4c098992cb2ed129d7c9f8aab2e4fe9e5067bf5a212f2ad73cbcec6c0",
+      "canonical_bytes": 18785
+    }
+  }
+}
