@@ -98,7 +98,7 @@ class GmailPanel:
         self.mail_tree.pack(side='left',fill='both',expand=True)
         scroll=ttk.Scrollbar(frame,orient='vertical',command=self.mail_tree.yview);scroll.pack(side='right',fill='y');self.mail_tree.configure(yscrollcommand=scroll.set)
         self.mail_rows={};self.mail_tree.bind('<Double-1>',lambda e:self.mail_review())
-        row=tk.Frame(f,bg=BG);row.pack(fill='x',padx=12,pady=(3,10))
+        row=tk.Frame(f,bg=BG);row.pack(side='bottom',before=frame,fill='x',padx=12,pady=(3,10))
         for label,command in [('Review selected message',self.mail_review),('Lookup selected advert',self.mail_lookup_selected),('Open public web search',self.mail_open_search)]:
             self.button(row,label,command).pack(side='left',padx=(0,6))
         self.refresh_mail();self.mail_check_preflight();self.after(200,self.mail_poll)

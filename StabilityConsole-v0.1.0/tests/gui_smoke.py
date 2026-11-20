@@ -24,6 +24,18 @@ def capture(root, name):
     path=Path(target);path.mkdir(parents=True,exist_ok=True)
     ImageGrab.grab(bbox=(x,y,x+root.winfo_width(),y+root.winfo_height())).save(path/(name+'.png'))
 
+def visible_button(root, text):
+    pending=[root]
+    while pending:
+        widget=pending.pop()
+        if widget.winfo_class()=='Button' and widget.cget('text')==text:
+            assert widget.winfo_ismapped(), text+' is hidden'
+            assert widget.winfo_rooty()+widget.winfo_height()<=root.winfo_rooty()+root.winfo_height(),text+' is clipped'
+            assert widget.winfo_rootx()+widget.winfo_width()<=root.winfo_rootx()+root.winfo_width(),text+' is clipped'
+            return
+        pending.extend(widget.winfo_children())
+    raise AssertionError('Missing button: '+text)
+
 with tempfile.TemporaryDirectory() as td:
     os.environ['STABILITY_CONSOLE_DATA']=td
     Path(td,'readme_seen.flag').write_text('test')
@@ -55,11 +67,11 @@ with tempfile.TemporaryDirectory() as td:
     capture(root,'03-gmail')
     root.mail_wizard();root.update()
     assert root.setup_window.winfo_exists()
-    capture(root,'04-gmail-setup')
+    capture(root.setup_window,'04-gmail-setup')
     root.setup_window.dismiss();root.update()
     root.application_dialog();root.update()
     dialog=next(w for w in root.winfo_children() if w.winfo_class()=='Toplevel' and w.winfo_exists())
-    capture(root,'05-application-form')
+    capture(dialog,'05-application-form')
     dialog.destroy()
     report={'schema_version':1,'namespace':'gui-test','report_id':'gui-session','account':'candidate@example.org',
         'applications':[{'external_id':'GUI-1','title':'Service Desk','employer':'Example Employer','status':'SENT',
@@ -89,6 +101,15 @@ with tempfile.TemporaryDirectory() as td:
     root.workflow_tick();root.update()
     assert root.conn.execute('SELECT check_state FROM workflow_sessions WHERE id=?',(ident,)).fetchone()[0]=='BLOCKED'
     root.workflow_refresh();root.notebook.select(root.workflow);root.update_idletasks();root.update()
+    root.geometry('%dx%d'%root.minsize());root.update()
+    visible_button(root,'Import session report')
+    capture(root,'07-minimum-workflow')
+    root.notebook.select(root.gmail);root.update()
+    visible_button(root,'Review selected message')
+    capture(root,'08-minimum-gmail')
+    root.notebook.select(root.overview);root.update()
+    visible_button(root,'Add application')
+    capture(root,'09-minimum-overview')
     root.update_idletasks()
     root.update()
     root.close()

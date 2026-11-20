@@ -56,7 +56,8 @@ def apply_theme(root):
     style.configure('TNotebook.Tab', background=PANEL, foreground=MUTED,
                     padding=(14, 10), font=('Segoe UI', 10), borderwidth=0)
     style.map('TNotebook.Tab', background=[('selected', SELECT), ('active', FIELD)],
-              foreground=[('selected', ACCENT), ('active', FG)])
+              foreground=[('selected', ACCENT), ('active', FG)],
+              padding=[('selected', (14, 10)), ('!selected', (14, 10))])
     # The outer notebook keeps the existing page-selection API; navigation lives left.
     style.layout('Shell.TNotebook.Tab', [])
     style.configure('Shell.TNotebook', background=BG, borderwidth=0, tabmargins=0)
@@ -109,6 +110,7 @@ def wrap_labels(parent):
         if isinstance(widget, tk.Label):
             text = str(widget.cget('text'))
             if widget.cget('wraplength') or len(text) > 90:
+                widget.configure(anchor='w',justify='left')
                 widget.bind('<Configure>', lambda event: event.widget.configure(
                     wraplength=max(180, event.width-24)), add='+')
         wrap_labels(widget)
